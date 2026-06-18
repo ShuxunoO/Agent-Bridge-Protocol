@@ -1,6 +1,134 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+################################################################################
+## UPCOMING ROADMAP (forward plan — step by step; each step flips to a SESSION
+## LOG entry below when it lands GREEN. Format per step: GOAL / TEST / EXPECT.)
+## Recommended order is top-to-bottom; F7.1 is the milestone that first enables
+## linking to a REAL external sandbox (not the mock/demo host).
+## Status legend: [todo] not started · [done] flipped + logged below.
+################################################################################
+
+--- PHASE P4: security hardening (continue) ---
+
+[todo] F4.1 — Untrusted tagging + locked persona prompt + injection eval set  (verify: rules-based + e2e)
+  GOAL:   A wrapper that, BEFORE any host text reaches the model, enumerates the untrusted field
+          paths from PinnedProfile.trust.events[kind].untrusted and wraps/delimits them as data
+          (e.g. <untrusted source="role:mira">...</untrusted>) with the content escaped so it can't
+          break out of the delimiter. Ship the locked persona system prompt (examples/persona.md ->
+          a code constant) and a starter injection eval set (exfil / role-override / tool-coercion).
+  TEST:   rules-based unit — feed events (perception/message w/ adversarial content) through the
+          wrapper; assert EXACTLY the profile's untrusted paths are delimited, delimiter injection
+          in the content is neutralized (escaped), and trusted/control fields are untouched. Unit:
+          persona prompt constant contains the data-not-instructions clauses. The eval-set cases are
+          authored here; they are SCORED by the F4.4 harness.
+  EXPECT: wrapper marks only untrusted leaves; escaped delimiter attempts cannot terminate the
+          wrapper; persona constant present; >=12 eval cases authored. Green.
+
+[todo] F4.3 — Capability isolation enforcement (+ optional isolation_mode: process)  (verify: rules-based)
+  GOAL:   Programmatic enforcement (not just the settings allowlist) that the avatar sub-context can
+          invoke ONLY the abp_*/persona tools — fs/shell/network/other-MCP calls are refused. Add an
+          optional OS-level process-isolation launch mode (isolation_mode: process) for hardened use.
+  TEST:   rules-based unit — a guard given an out-of-allowlist tool name (Bash/Read/fetch/other MCP)
+          refuses; an in-allowlist tool (mcp__agent-bridge__abp_*) passes. Test the process-isolation
+          launcher spawns with the restricted env (smoke).
+  EXPECT: every out-of-allowlist call refused; allowlisted pass; isolation launcher starts. Green.
+
+[todo] F4.4 — Prompt-injection regression eval harness (+ CI gate)  (verify: rules-based)
+  GOAL:   A harness that runs the F4.1 eval set through the full defense stack (wrapper+persona +
+          F4.2 DLP + F4.3 capability guard), computes a pass rate, and gates CI at a threshold.
+          Two layers: (a) DETERMINISTIC structural checks that always run (DLP blocks each exfil
+          payload; capability guard blocks each tool-coercion; wrapper marks each role-override as
+          untrusted) — these are the CI gate; (b) OPTIONAL live-model eval (off by default, needs an
+          API key) for true behavioral coverage.
+  TEST:   run the harness; assert deterministic pass rate == 100% and that the gate fails if any
+          single defense is disabled (inject a regression to prove the gate bites).
+  EXPECT: deterministic eval 100%; disabling DLP or the guard drops the rate and fails the gate. Green.
+
+--- PHASE P5: persona memory (local, curated) ---
+
+[todo] F5.1 — Persona profile format + loader  (verify: rules-based)
+  GOAL:   A user-authored persona profile schema (display name, backstory, traits, goals, speaking
+          style — curated, NO secrets/paths) + a loader that validates it (closed schema).
+  TEST:   rules-based unit — a valid profile loads; missing-required / unknown-field / oversized
+          profiles are rejected with a clear error.
+  EXPECT: valid loads; each malformed variant rejected. Green.
+
+[todo] F5.2 — Local social memory store (namespaced, hard-walled)  (verify: rules-based)
+  GOAL:   Replace the F3.1 in-memory persona_memory placeholder with a PERSISTENT, namespaced local
+          store. Access is confined to the bound role's namespace; it can never read another
+          namespace or the main agent's private memory; it is never transmitted to the host.
+  TEST:   rules-based unit — set+recall facts within the namespace; a read outside the namespace is
+          refused; data persists across store reopen; nothing leaves via ABP (no memory field on any
+          action — already guaranteed by closed schemas).
+  EXPECT: in-namespace recall works; cross-namespace access blocked; persists across reopen. Green.
+
+--- PHASE P6: autopilot + config ---
+
+[todo] F6.1 — Connection daemon (persistent link + reconnect)  (verify: e2e)
+  GOAL:   A daemon that keeps the outbound link up: on drop it reconnects with exponential backoff,
+          re-pairs/resumes, and sends resume{last_event_seq} so the host backfills or snapshots
+          (§4.3.2) — no silently-missed world state.
+  TEST:   e2e — start daemon vs a mock host; forcibly drop the socket; assert it reconnects within
+          backoff, sends resume with the correct last_event_seq, and resumes driving.
+  EXPECT: reconnect succeeds; resume cursor == last processed seq; world state recovered. Green.
+
+[todo] F6.2 — Autopilot loop driving a sandboxed headless local agent  (verify: e2e)
+  GOAL:   An autonomous loop that drives a sandboxed headless Claude Code (via the MCP tools +
+          allowlist) for N turns without a human, with DLP and capability isolation active.
+  TEST:   e2e — run autopilot for N>=5 turns against the demo host; assert each turn is answered
+          within its deadline, all actions pass DLP, and no out-of-allowlist tool call occurs.
+  EXPECT: N turns driven autonomously; defenses active throughout; transcript captured. Green.
+
+[todo] F6.3 — Config + hot-unplug kill switch  (verify: rules-based)
+  GOAL:   Config to toggle user-in-the-loop vs autopilot; a hot-unplug kill switch that stops the
+          loop cleanly, sends `bye`, and tears down transport/driver/daemon.
+  TEST:   rules-based unit — toggling config switches mode; kill switch stops the loop, emits bye,
+          and releases resources (no open handles / timers).
+  EXPECT: toggles take effect; kill switch stops cleanly with bye sent. Green.
+
+--- PHASE P7: host SDK + AI-Town adapter (FIRST REAL EXTERNAL LINK) ---
+
+[todo] F7.1 — Generic Host SDK (expose roles over ABP)  (verify: e2e)  <<< KEY MILESTONE
+  GOAL:   Server-side helper any app embeds: accept outbound clients, run the host half of pairing
+          (issue challenge, verify signature, mint role+profile+capability-scoped tokens), advertise
+          + inline the World Profile with its hash, emit events (with monotonic seq), validate+apply
+          incoming actions (capabilities + allowed_actions + rate/size), backfill/snapshot on resume.
+  TEST:   e2e — a reference host built on the SDK runs in one process; our real client SDK connects
+          over wss from another; full handshake + drive a turn + resume. Host-side conformance:
+          rejects unknown/forged-signature/out-of-scope/oversize, never blocks on an absent client.
+  EXPECT: TWO-PROCESS real client<->real host e2e passes (no mock); host conformance suite green.
+          >>> After this, "link to a real sandbox" is real, decoupled from AI-Town.
+
+[todo] F7.2 — AI-Town host adapter (lives in the ai-town repo)  (verify: e2e)
+  GOAL:   Add agent.controller="external" to AI-Town; external roles ENQUEUE actions instead of
+          calling the LLM; wire the F7.1 Host SDK; auto-accept invites (locked decision §5.6.2).
+  TEST:   e2e — run AI-Town with the adapter; drive a role from our client/Claude Code; assert the
+          avatar moves and speaks inside AI-Town and conversations work (auto-join + interact_leave).
+  EXPECT: a Claude-Code-driven avatar visibly acts as a character in AI-Town. Green.
+
+--- PHASE P8: other agent adapters ---
+
+[todo] F8.1 — Codex adapter (+ OpenClaw / Hermes once MCP confirmed)  (verify: e2e)
+  GOAL:   Confirm each agent's MCP support; ship a thin adapter/profile so Codex (etc.) drives an
+          avatar through the SAME MCP tools — proving the connector is agent-agnostic.
+  TEST:   e2e smoke — Codex connects to the agent-bridge MCP server and drives the demo host through
+          link/wait_for_event/say.
+  EXPECT: Codex drives an avatar via the identical tool surface. Green.
+
+--- PHASE P9: scale / throughput (future) ---
+
+[todo] F9.1 — Sharded streams, backpressure, horizontal scale, load test  (verify: e2e, future)
+  GOAL:   Per-role queues + backpressure on the host; horizontal host scaling; sustain a target
+          concurrent-avatar count.
+  TEST:   load test — N concurrent driven avatars; measure throughput/latency and backpressure
+          (no unbounded queue growth, no world-blocking on slow clients).
+  EXPECT: target concurrency sustained within latency budget; backpressure holds. Green.
+
+################################################################################
+## END ROADMAP — SESSION LOG (newest first) follows
+################################################################################
+
 == 2026-06-18 — Session 10: F4.2 egress DLP (deterministic) — P4 start ==
 Done (F4.2 PASSED):
 - packages/client/src/dlp.ts: EgressFilter (L3 egress data-leak prevention, SPEC §6.4). Deterministic,
