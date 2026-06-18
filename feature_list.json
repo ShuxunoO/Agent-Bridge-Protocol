@@ -212,9 +212,10 @@
         {
           "id": "F5.2",
           "title": "Local social memory store (namespaced, hard-walled)",
-          "status": "todo",
+          "status": "passed",
           "priority": "medium",
           "verification": "rules-based",
+          "evidence": "packages/client/src/memory.ts: PersonaMemoryStore(namespace,{dir}) — persistent JSON file per namespace (mode 0600), get/set/delete/list. safeNamespace() flattens to one safe filename segment (path separators stripped; pure '.'/'..' rejected) so a store can never traverse out of its dir or read another namespace / the main agent's memory; never transmitted to host (closed action schemas carry no memory field). Wired into mcp Connector: created on link() namespaced by the bound role id (session.role.id); lazy 'default' namespace for pre-link; reset on close() so a re-link rebinds. Connector gains ConnectorOptions.memoryDir; tests pass a temp dir. Verified ./init.sh exit 0: validator 39 + client 93 (+5 memory.test) + mcp 16 = 148, 0 fail. memory tests: set/get/list/delete; persists across reopen; role-a vs role-b hard-walled (b cannot see a's keys); traversal namespace flattened to a single file (no separators) + pure '..' rejected; missing key -> null.",
           "steps": ["separate local store", "persona_memory_* confined to namespace", "unit: recall town facts; cannot read outside"],
           "depends_on": ["F5.1"]
         }

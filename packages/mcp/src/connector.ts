@@ -1,5 +1,5 @@
 import { ProfileLoader, PinnedProfile, type ApproveFn } from "@agent-bridge/validator";
-import { WssTransport, Keypair, pair, Driver, wrapUntrusted, type AbpEvent, type EventContext } from "@agent-bridge/client";
+import { WssTransport, Keypair, pair, Driver, wrapUntrusted, PersonaMemoryStore, type AbpEvent, type EventContext } from "@agent-bridge/client";
 
 /** Label the origin of an event's untrusted content (best-effort, for the wrapper's `source` attr). */
 function eventSource(ev: AbpEvent): string {
@@ -17,6 +17,11 @@ export type LinkOptions = {
   keypairPath?: string;
   approveProfile?: ApproveFn;
   profiles?: { id: string; version: string }[];
+};
+
+export type ConnectorOptions = {
+  /** Directory for the persistent persona memory store (default: ~/.agent-bridge/persona-memory). */
+  memoryDir?: string;
 };
 
 export type LinkResult = {
@@ -42,11 +47,23 @@ export class Connector {
   #lastPerception: Record<string, unknown> | null = null;
   #queue: BufferedEvent[] = [];
   #waiters: Waiter[] = [];
-  // Placeholder local store for F3.1; F5.2 replaces it with a persistent, namespaced, hard-walled store.
-  #memory = new Map<string, unknown>();
+  // Persistent, namespaced, hard-walled persona memory (F5.2). Created on link() with the bound
+  // role's id as the namespace; a "default" namespace is used for any pre-link access.
+  #memoryDir?: string;
+  #memory?: PersonaMemoryStore;
+
+  constructor(opts: ConnectorOptions = {}) {
+    this.#memoryDir = opts.memoryDir;
+  }
 
   get linked(): boolean {
     return this.#driver !== undefined;
+  }
+
+  #store(): PersonaMemoryStore {
+    // link() sets the role-namespaced store; this lazy default covers pre-link access.
+    if (!this.#memory) this.#memory = new PersonaMemoryStore("default", { dir: this.#memoryDir });
+    return this.#memory;
   }
 
   /** Connect outbound, pair, and start the event loop (manual turn mode). */
@@ -69,6 +86,8 @@ export class Connector {
     this.#transport = transport;
     this.#driver = driver;
     this.#profile = profile;
+    // Persona memory is namespaced by the bound role (hard-walled from other roles / main agent).
+    this.#memory = new PersonaMemoryStore(session.role.id, { dir: this.#memoryDir });
     return { role: session.role, capabilities: [...session.capabilities], profile: session.profile };
   }
 
@@ -137,20 +156,21 @@ export class Connector {
     return { ok: true, mode: "proactive" };
   }
 
-  /** Local persona memory (placeholder; F5.2 = persistent, namespaced, hard-walled store). */
+  /** Local persona memory: persistent, namespaced by the bound role, hard-walled (F5.2). Never sent to the host. */
   personaMemory(op: "get" | "set" | "delete" | "list", key?: string, value?: unknown): unknown {
+    const store = this.#store();
     switch (op) {
       case "set":
         if (!key) throw new Error("key required");
-        this.#memory.set(key, value ?? null);
+        store.set(key, value ?? null);
         return { ok: true };
       case "get":
-        return { value: key ? (this.#memory.get(key) ?? null) : null };
+        return { value: key ? store.get(key) : null };
       case "delete":
-        if (key) this.#memory.delete(key);
+        if (key) store.delete(key);
         return { ok: true };
       case "list":
-        return { keys: [...this.#memory.keys()] };
+        return { keys: store.list() };
     }
   }
 
@@ -166,6 +186,7 @@ export class Connector {
     this.#driver = undefined;
     this.#transport = undefined;
     this.#profile = undefined;
+    this.#memory = undefined; // a re-link rebinds memory to the new role's namespace
   }
 
   #assertLinked(): void {

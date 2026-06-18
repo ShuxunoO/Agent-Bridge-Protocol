@@ -1,5 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Connector } from "../src/index.ts";
 import { drivableHost, startServer, perception, message, flush } from "./_host.ts";
 
@@ -7,7 +10,7 @@ const TIMEOUT = { timeout: 5000 };
 
 async function linked(host = drivableHost()) {
   const { wss, port } = await startServer(host.onConn);
-  const connector = new Connector();
+  const connector = new Connector({ memoryDir: mkdtempSync(join(tmpdir(), "abp-mem-")) });
   const result = await connector.link({ url: `ws://127.0.0.1:${port}`, target: "avatar-1" });
   const teardown = () => {
     connector.close();

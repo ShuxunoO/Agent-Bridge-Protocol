@@ -47,14 +47,14 @@ AGENT-BRIDGE — PROGRESS LOG
 
 --- PHASE P5: persona memory (local, curated) ---
 
-[todo] F5.1 — Persona profile format + loader  (verify: rules-based)
+[done] F5.1 — Persona profile format + loader  (verify: rules-based)
   GOAL:   A user-authored persona profile schema (display name, backstory, traits, goals, speaking
           style — curated, NO secrets/paths) + a loader that validates it (closed schema).
   TEST:   rules-based unit — a valid profile loads; missing-required / unknown-field / oversized
           profiles are rejected with a clear error.
   EXPECT: valid loads; each malformed variant rejected. Green.
 
-[todo] F5.2 — Local social memory store (namespaced, hard-walled)  (verify: rules-based)
+[done] F5.2 — Local social memory store (namespaced, hard-walled)  (verify: rules-based)  ** P5 COMPLETE **
   GOAL:   Replace the F3.1 in-memory persona_memory placeholder with a PERSISTENT, namespaced local
           store. Access is confined to the bound role's namespace; it can never read another
           namespace or the main agent's private memory; it is never transmitted to the host.
@@ -128,6 +128,24 @@ AGENT-BRIDGE — PROGRESS LOG
 ################################################################################
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
+
+== 2026-06-19 — Session 14: P5 persona memory (F5.1 profile loader + F5.2 hard-walled store) ==
+F5.1 PASSED — packages/client/src/persona-profile.ts: loadPersonaProfile(doc) validates a closed
+curated shape (displayName required; backstory/traits/goals/speakingStyle optional; PERSONA_LIMITS;
+unknown/wrong-type/oversize rejected) + EgressFilter scan so any secret/key/abs-path is refused
+(persona must be public). loadPersonaProfileFile() for JSON. buildPersonaPrompt composes it.
+F5.2 PASSED — packages/client/src/memory.ts: PersonaMemoryStore(namespace,{dir}) persistent JSON
+(0600) per namespace; safeNamespace flattens to one safe filename (separators stripped; '.'/'..'
+rejected) so it can't traverse out or read another namespace / the main agent's memory; never sent
+to host. Wired into mcp Connector: created on link() namespaced by bound role id; lazy 'default'
+pre-link; reset on close(); ConnectorOptions.memoryDir (tests use temp dirs).
+Evidence (./init.sh exit 0): validator 39 + client 93 (+7 persona-profile, +5 memory) + mcp 16 =
+148, 0 fail. (memory.test traversal assertion corrected: '/' stripping is the real guarantee; a
+literal '..' inside a single filename segment is harmless.)
+*** PHASE P5 COMPLETE. L4 (memory isolation) of the DESIGN §4 model is now enforced. ***
+NEXT: P6 autopilot. F6.1 connection daemon (persistent link + backoff reconnect + resume cursor),
+F6.2 autopilot loop (drive a sandboxed headless agent via MCP + capability guard, DLP active),
+F6.3 config toggle + hot-unplug kill switch. Then STOP at P7 (Host SDK + AI-Town) per user.
 
 == 2026-06-19 — Session 13: F4.4 injection regression harness + CI gate — P4 COMPLETE ==
 Done (F4.4 PASSED):

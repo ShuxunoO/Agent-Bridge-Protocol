@@ -1,14 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { createServer, Connector } from "../src/index.ts";
 import { drivableHost, startServer, perception, flush } from "./_host.ts";
 
 const TIMEOUT = { timeout: 5000 };
+const tmpMemDir = () => mkdtempSync(join(tmpdir(), "abp-mem-"));
 
 /** Wire a real MCP client to the agent-bridge server over an in-memory transport pair. */
-async function mcpPair(connector = new Connector()) {
+async function mcpPair(connector = new Connector({ memoryDir: tmpMemDir() })) {
   const server = createServer(connector);
   const [clientT, serverT] = InMemoryTransport.createLinkedPair();
   await server.connect(serverT);
