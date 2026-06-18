@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/pair_challenge.json",
+  "title": "ABP v1 pair_challenge payload (Host -> Client)",
+  "description": "Nonce the client signs during pairing (§4.2). Hosts MUST reject replayed nonces.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nonce"],
+  "properties": {
+    "nonce": { "type": "string", "minLength": 8, "maxLength": 256 },
+    "expires_at": { "type": "integer", "minimum": 0 }
+  }
+}

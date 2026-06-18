@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/ping.json",
+  "title": "ABP v1 ping/pong payload (both directions)",
+  "description": "Keepalive / liveness (§4.1). Shared by `ping` and `pong`. A pong SHOULD echo the ping's nonce.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nonce": { "type": "string", "maxLength": 128 }
+  }
+}

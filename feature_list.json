@@ -58,9 +58,10 @@
         {
           "id": "F1.1",
           "title": "Schema validator + remaining control-plane schemas + conformance tests",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "rules-based",
+          "evidence": "Authored all 10 remaining control-plane schemas in SPEC/schemas/core/ (hello, hello_ack [inlined profile + hash], roles_query, roles_list, pair_challenge/request/result, resume [last_event_seq], ping [shared with pong], bye). Built packages/validator (TypeScript, Node 24 type-stripping, ajv 2020-12): CoreValidator validates the closed envelope, dispatches payload by type, enforces §2 size(65536B)/depth(16) limits; data-plane validates Core event/action envelope only (profile composition deferred to F1.2); x-abp-trust registered as a no-op annotation keyword. Conformance suite: 25/25 pass (node --test) + tsc typecheck clean. Verified via ./init.sh: 16 schemas parse, typecheck clean, 25 pass / 0 fail. Covered: valid messages pass; unknown type/kind-field rejected; additionalProperties:false enforced; data-plane+resume require session; event requires seq; wrong abp version rejected; oversize/non-JSON/over-depth/non-object rejected. Fixed envelope.json comment->$comment and added resume to session-required set.",
           "steps": [
             "Author remaining control-plane schemas (hello, hello_ack, roles_query, roles_list, pair_*, resume, ping, bye) per §4 field tables (hello_ack carries the inlined profile + hash; resume carries last_event_seq).",
             "Validator lib that checks envelope + payload by type/kind (Core layer only here; profile composition is F1.2).",

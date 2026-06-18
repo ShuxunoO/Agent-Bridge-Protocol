@@ -452,7 +452,7 @@ An implementation is **ABP/1 conformant** if it:
 5. (Host) never blocks on an absent client, re-validates capabilities/profile server-side,
    de-duplicates by `id`, and backfills-or-snapshots on resume.
 
-A conformance test suite lives at `tests/conformance/` (see `feature_list.json` F1.1).
+A conformance test suite lives at `packages/validator/test/` (see `feature_list.json` F1.1).
 
 ## 9. Extensibility (without breaking the security model)
 

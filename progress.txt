@@ -1,6 +1,41 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 3: F1.1 Core validator + control-plane schemas + conformance ==
+First implementation increment. Reference impl is TypeScript/Node (Node 24 native type-stripping,
+ajv for JSON Schema 2020-12). Registry reachable; ajv installed.
+
+Done (F1.1 PASSED):
+- Authored the 10 remaining Core control-plane schemas in SPEC/schemas/core/: hello, hello_ack
+  (carries inlined World Profile {id,version,hash,document}), roles_query, roles_list,
+  pair_challenge, pair_request (target + optional pubkey/signature/nonce/claim), pair_result
+  (session + capabilities + bound profile + expires_at), resume (last_event_seq), ping (shared by
+  ping/pong), bye. Plus envelope fixes: "comment"->"$comment"; resume added to session-required.
+- packages/validator (@agent-bridge/validator): CoreValidator validates the closed envelope,
+  dispatches the payload to its Core schema by `type`, and enforces the §2 limits
+  (size 65536B before parse, depth 16). Data-plane event/action are validated at the Core ENVELOPE
+  layer only ({kind,seq,data}/{kind,data}); kind/data composition against a pinned World Profile is
+  F1.2. x-abp-trust registered as a no-op ajv annotation keyword so profile schemas compile later.
+  validateEncoded(text) covers the wire path (bytes -> parse -> depth -> schema); validateMessage(obj)
+  the parsed path.
+- Monorepo wiring: root package.json (npm workspaces) + validator package; init.sh recurses schemas
+  and runs `npm test`; validator `test` runs tsc typecheck then node --test.
+
+Evidence (./init.sh, fully green):
+- 16 schemas parse (core x15 + social profile).
+- tsc -p packages/validator/tsconfig.json: typecheck CLEAN.
+- node --test: 25 tests, 25 pass, 0 fail. Covers: valid hello/hello_ack/roles_list/pair_result/
+  event/action/ping/pong/error/resume pass; unknown type rejected; unknown envelope+payload field
+  rejected (additionalProperties:false); wrong abp version rejected; bad enum rejected; event/action/
+  resume without session rejected; event missing seq rejected; action missing data rejected; bye
+  requires reason; non-object/missing-id rejected; oversize/non-JSON/over-depth rejected;
+  encoded round-trip passes.
+
+NEXT: F1.2 — World Profile loader: validate a profile doc against core/profile.json meta-schema;
+pin by content hash (reject profile_mismatch; approval gate for unknown id,version,hash); COMPOSE
+data-plane validation (event/action data vs pinned profile events[kind].data / actions[kind].data);
+enumerate x-abp-trust:untrusted / client_authored field paths (feeds F4.1/F4.2). Then F2.1 transport.
+
 == 2026-06-18 — Session 2: foundational protocol review + layering revision (F0.3) ==
 User asked for a foundation-level review of SPEC/abp-v1.md before implementing, then chose the
 layered fix. Review surfaced one root tension + several structural gaps; all addressed in-spec.

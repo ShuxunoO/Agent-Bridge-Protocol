@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/bye.json",
+  "title": "ABP v1 bye payload (both directions)",
+  "description": "Graceful disconnect / hot-unplug (§4.1, §4.4). Carries a human-readable reason and an optional machine code.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reason"],
+  "properties": {
+    "reason": { "type": "string", "maxLength": 512 },
+    "code": { "type": "string", "maxLength": 64 }
+  }
+}

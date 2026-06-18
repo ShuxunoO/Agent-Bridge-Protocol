@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/roles_list.json",
+  "title": "ABP v1 roles_list payload (Host -> Client)",
+  "description": "In-band list of drivable roles with public display info and per-role bind policy (§4.2). display_name is foreign-authored.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["roles"],
+  "properties": {
+    "roles": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "bind_policy"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "display_name": { "type": "string", "maxLength": 128, "x-abp-trust": "untrusted" },
+          "bind_policy": { "type": "string", "enum": ["open", "claim_required", "closed"] },
+          "available": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

@@ -26,8 +26,8 @@
   },
   "allOf": [
     {
-      "comment": "Data-plane messages MUST carry a session.",
-      "if": { "properties": { "type": { "enum": ["event", "action"] } } },
+      "$comment": "Data-plane messages and resume MUST carry a session token.",
+      "if": { "properties": { "type": { "enum": ["event", "action", "resume"] } }, "required": ["type"] },
       "then": { "required": ["session"] }
     }
   ]

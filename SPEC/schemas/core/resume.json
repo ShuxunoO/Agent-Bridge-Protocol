@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/resume.json",
+  "title": "ABP v1 resume payload (Client -> Host)",
+  "description": "Re-attach an existing session after a disconnect (§4.2, §4.3.2). The session token is carried in the envelope `session` field. `last_event_seq` is the highest event seq the client durably processed; omit it to request a full resync from scratch.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "last_event_seq": { "type": "integer", "minimum": 0 }
+  }
+}

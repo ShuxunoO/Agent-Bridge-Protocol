@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/pair_result.json",
+  "title": "ABP v1 pair_result payload (Host -> Client)",
+  "description": "Successful binding (§4.2). Rejections are sent as `error`, not pair_result. The token is role+profile+capability-scoped. `capabilities` lists allowed action kinds; the reserved member 'proactive' grants out-of-turn actions (§4.3.1). `profile` MUST equal the pinned profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session", "role", "capabilities", "profile", "expires_at"],
+  "properties": {
+    "session": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "display_name": { "type": "string", "maxLength": 128, "x-abp-trust": "untrusted" }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "hash"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "hash": { "type": "string", "minLength": 7, "maxLength": 256 }
+      }
+    },
+    "expires_at": { "type": "integer", "minimum": 0 }
+  }
+}

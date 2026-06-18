@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/roles_query.json",
+  "title": "ABP v1 roles_query payload (Client -> Host)",
+  "description": "In-band role discovery request (§4.2). All filters optional; an empty object lists everything.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "available_only": { "type": "boolean" },
+    "area": { "type": "string", "maxLength": 128 }
+  }
+}

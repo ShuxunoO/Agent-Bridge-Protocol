@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/pair_request.json",
+  "title": "ABP v1 pair_request payload (Client -> Host)",
+  "description": "Bind a role (§4.2). target is an existing role id or the literal 'create'. pubkey+signature are present when the host issued a pair_challenge; nonce echoes the challenge. claim carries an out-of-band-issued credential for claim_required roles.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["target"],
+  "properties": {
+    "target": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "pubkey": { "type": "string", "maxLength": 512 },
+    "signature": { "type": "string", "maxLength": 1024 },
+    "nonce": { "type": "string", "minLength": 8, "maxLength": 256 },
+    "claim": {
+      "type": "string",
+      "maxLength": 512,
+      "description": "Host-issued claim credential (pairing code / claim token) proving the right to bind a claim_required role."
+    }
+  }
+}
