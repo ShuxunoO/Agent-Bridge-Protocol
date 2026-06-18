@@ -24,3 +24,13 @@ export { LOCKED_PERSONA_PROMPT, buildPersonaPrompt } from "./persona.ts";
 export type { PersonaProfile } from "./persona.ts";
 export { INJECTION_EVALS, INJECTION_CATEGORIES } from "./injection-evals.ts";
 export type { InjectionEval, InjectionCategory } from "./injection-evals.ts";
+export {
+  CapabilityGuard,
+  CapabilityError,
+  ABP_TOOL_NAMES,
+  AVATAR_MCP_ALLOWLIST,
+  MCP_SERVER_NAME,
+  mcpToolName,
+} from "./capability.ts";
+export { isolatedEnv, launchIsolated, BASE_ENV_KEYS } from "./isolation.ts";
+export type { IsolationOptions } from "./isolation.ts";

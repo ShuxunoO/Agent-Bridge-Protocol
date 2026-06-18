@@ -176,9 +176,10 @@
         {
           "id": "F4.3",
           "title": "Capability isolation enforcement (+ optional isolation_mode: process)",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "rules-based",
+          "evidence": "packages/client/src/capability.ts: CapabilityGuard (default-deny). ABP_TOOL_NAMES (6, match server.ts) + AVATAR_MCP_ALLOWLIST (mcp__agent-bridge__abp_*) are the only allowed tools (bare or qualified); isAllowed/assertAllowed refuse Bash/Read/Edit/Write/WebFetch/WebSearch/Task, foreign MCP (mcp__filesystem__*), and unknown abp_* — CapabilityError carries the tool. The settings allowlist now DERIVES from AVATAR_MCP_ALLOWLIST (single source of truth). packages/client/src/isolation.ts: isolatedEnv(allow) scrubs parent secrets (only BASE_ENV_KEYS + allow survive); launchIsolated() spawns a child with that scrubbed env (isolation_mode: process, the opt-in OS-level hardening). Verified ./init.sh exit 0: tsc clean; validator 39 + client 74 (+6 capability.test) + mcp 16 (+1 settings.test) = 129, 0 fail. capability tests: every ABP tool allowed bare+qualified; 12 out-of-allowlist names refused + throw; assertAllowed carries tool; extra grants; isolatedEnv drops SECRET_TOKEN keeps PATH honors allow; launchIsolated smoke — child env excludes parent ABP_TEST_SECRET, keeps PATH, live pid. mcp settings.test: examples/claude-settings.json permissions.allow == AVATAR_MCP_ALLOWLIST and denies Bash/Read/Edit/Write/WebFetch. Runtime enforcement point (autopilot forwarding) is wired in F6.2.",
           "steps": ["avatar context exposes only allowlisted tools", "optional OS-level process isolation", "unit: fs/shell/other-MCP refused"],
           "depends_on": ["F4.1"]
         },
