@@ -72,9 +72,10 @@
         {
           "id": "F1.2",
           "title": "World Profile loader + pinning + composed data-plane validation",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "rules-based",
+          "evidence": "packages/validator/src/profile.ts: ProfileLoader validates a profile doc against core/profile.json meta-schema and compiles every events[kind].data / actions[kind].data; canonicalize()+profileHash() give a stable sha256-base64url content hash (§5.5); pin() verifies recomputed hash == advertised (else profile_mismatch), checks document self-identifies as advertised id/version, then accepts only bundled/trusted profiles silently or via an approve() hook (else profile_unsupported); bundled set = SPEC/schemas/profiles/social/1.json. PinnedProfile.validateEvent/validateAction compose data-plane validation; AbpValidator = CoreValidator + PinnedProfile. Trust paths (x-abp-trust untrusted/client_authored) enumerated from the pinned profile into profile.trust.{events,actions}[kind] for F4.1/F4.2. Verified via ./init.sh: 39/39 tests pass (25 conformance + 14 profile) + tsc clean. Profile tests cover: social/1 pins silently w/ expected kinds; tampered doc -> profile_mismatch; wrong hash -> profile_mismatch; unknown profile -> profile_unsupported w/o approval, pins w/ approval; invalid doc -> bad_message; composed valid event/action pass; unknown kind + unknown data field + oversize content + world.context>maxProperties + Core-layer (missing seq) all rejected; untrusted/client_authored path enumeration exact.",
           "steps": [
             "Load + validate a profile document against core/profile.json meta-schema.",
             "Pin by content hash; reject mismatch (profile_mismatch); approval gate for unknown (id,version,hash).",

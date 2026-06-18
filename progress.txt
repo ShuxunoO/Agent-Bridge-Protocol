@@ -1,6 +1,43 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 4: F1.2 World Profile loader + pinning + composed validation ==
+Second implementation increment. Completes the validation core: data-plane messages are now
+validated against a content-pinned World Profile, and the trust annotations are made actionable.
+
+Done (F1.2 PASSED):
+- packages/validator/src/profile.ts:
+  * canonicalize(doc) (sorted-key, whitespace-free) + profileHash(doc) -> "sha256-<base64url>":
+    the normative §5.5 content hash, identical on host (advertise) and client (recompute).
+  * ProfileLoader: validates a profile document against core/profile.json (meta-schema) and
+    compiles every events[kind].data / actions[kind].data into a usable validator (per-profile
+    ajv, x-abp-trust registered). pin(advertised, {approve?}): recompute hash and compare to the
+    advertised one (mismatch -> profile_mismatch); also check the document self-identifies as the
+    advertised id/version; accept bundled/trusted profiles silently, otherwise require an approve()
+    hook (else profile_unsupported). Bundled set = schemas/profiles/social/1.json (pins silently).
+  * PinnedProfile.validateEvent/validateAction = composed data-plane validation (unknown kind /
+    unknown field rejected; profile-level bounds like content maxLength and world.context
+    maxProperties enforced). AbpValidator = CoreValidator (F1.1) + PinnedProfile.
+  * Trust-path enumeration: x-abp-trust:untrusted / client_authored field paths are walked out of
+    the pinned profile into profile.trust.{events,actions}[kind] (JSON-pointer-style, [] for array
+    items) — the machine-readable input to the L2 wrapper (F4.1) and L3 egress DLP (F4.2).
+- index.ts re-exports the new API; package test runs all test/*.test.ts.
+
+Evidence (./init.sh, fully green):
+- 16 schemas parse; tsc typecheck CLEAN.
+- node --test: 39 tests, 39 pass, 0 fail (25 conformance F1.1 + 14 profile F1.2).
+  Profile suite: social/1 pins silently w/ exact event/action kinds; tampered doc & wrong hash ->
+  profile_mismatch; unknown profile -> profile_unsupported (no hook) / pins (hook approves);
+  invalid doc -> bad_message; composed valid event/action pass; unknown kind, unknown data field,
+  oversize content, world.context > maxProperties, and Core-layer (missing seq) all rejected;
+  untrusted paths = {message:[/content,/from_role/display_name], perception:[/nearby/[]/role/
+  display_name,/world/context], invite:[/from_role/display_name]}; client_authored = {say:[/text],
+  emote:[/emote]} — all exact.
+
+NEXT: P2 — Client SDK. F2.1 transport (outbound wss baseline) + envelope (de)serialize w/
+validation (loopback round-trip), then F2.2 pairing/auth, F2.3 event loop. (F4.1/F4.2 can now
+consume profile.trust path enumeration when P4 begins.)
+
 == 2026-06-18 — Session 3: F1.1 Core validator + control-plane schemas + conformance ==
 First implementation increment. Reference impl is TypeScript/Node (Node 24 native type-stripping,
 ajv for JSON Schema 2020-12). Registry reachable; ajv installed.

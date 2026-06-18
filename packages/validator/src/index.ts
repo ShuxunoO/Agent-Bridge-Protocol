@@ -8,5 +8,22 @@ export type {
   ValidationOk,
   ValidationError,
 } from "./validator.ts";
-export { PAYLOAD_SCHEMA, loadCoreSchema } from "./schemas.ts";
+export { PAYLOAD_SCHEMA, loadCoreSchema, loadBundledProfile, BUNDLED_PROFILE_FILES } from "./schemas.ts";
 export type { JSONSchema } from "./schemas.ts";
+export {
+  ProfileLoader,
+  PinnedProfile,
+  AbpValidator,
+  canonicalize,
+  profileHash,
+} from "./profile.ts";
+export type {
+  TrustClass,
+  TrustPath,
+  KindTrust,
+  AdvertisedProfile,
+  ApproveFn,
+  ProfileLoadResult,
+  ProfileLoadOk,
+  ProfileLoadError,
+} from "./profile.ts";

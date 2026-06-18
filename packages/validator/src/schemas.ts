@@ -4,7 +4,9 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // src/ -> validator/ -> packages/ -> repo root
-const CORE_DIR = join(here, "..", "..", "..", "SPEC", "schemas", "core");
+const SCHEMAS_DIR = join(here, "..", "..", "..", "SPEC", "schemas");
+const CORE_DIR = join(SCHEMAS_DIR, "core");
+const PROFILES_DIR = join(SCHEMAS_DIR, "profiles");
 
 /** A loaded JSON Schema document (opaque to this module). */
 export type JSONSchema = Record<string, unknown>;
@@ -12,6 +14,17 @@ export type JSONSchema = Record<string, unknown>;
 /** Read a Core schema by base name (without the .json extension). */
 export function loadCoreSchema(name: string): JSONSchema {
   return JSON.parse(readFileSync(join(CORE_DIR, `${name}.json`), "utf8")) as JSONSchema;
+}
+
+/**
+ * Bundled World Profiles shipped with the connector (paths under SPEC/schemas/profiles/).
+ * These pin silently; any other profile a host offers requires explicit approval (§5.5).
+ */
+export const BUNDLED_PROFILE_FILES: readonly string[] = Object.freeze(["social/1.json"]);
+
+/** Read a bundled World Profile document by its path relative to SPEC/schemas/profiles/. */
+export function loadBundledProfile(relPath: string): JSONSchema {
+  return JSON.parse(readFileSync(join(PROFILES_DIR, relPath), "utf8")) as JSONSchema;
 }
 
 /** Core envelope schema name. */
