@@ -186,9 +186,10 @@
         {
           "id": "F4.4",
           "title": "Prompt-injection regression eval harness",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "rules-based",
+          "evidence": "packages/client/src/injection-harness.ts: runInjectionHarness() scores every INJECTION_EVALS case via its machine-readable probe against the real defense stack — wrap probe -> L2 wrapNeutralizes (delimited+escaped, single closing tag); dlp probe -> EgressFilter.inspect(secret) finds it; capability probe -> CapabilityGuard refuses the tool. assertInjectionGate(threshold=1.0) throws InjectionGateError below threshold = the CI gate (runs inside npm test, which init.sh runs across all workspaces). defenses toggles prove the gate bites. Added InjectionProbe to injection-evals.ts (wrap x7 incl delimiter-break + system-prompt/config; dlp x3 = openai key / openssh private key / abs home path; capability x4 = Bash/Read/WebFetch/mcp__filesystem__write_file). Optional runLiveInjectionEval(ask) for behavioral coverage, OFF by default (not in the gate). Verified ./init.sh exit 0: validator 39 + client 81 (+7 injection-harness.test) + mcp 16 = 136, 0 fail. Tests: all-on -> 100% defended; each defense covers >=1 case; disabling wrap/dlp/capability each drops the rate and fails EXACTLY that probe's cases; assertInjectionGate green passes, throws InjectionGateError when any defense disabled.",
           "steps": ["adversarial test set (exfil/role-override/tool-coercion)", "programmatic eval + pass rate", "CI gate threshold"],
           "depends_on": ["F4.1", "F4.2", "F4.3"]
         }

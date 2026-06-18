@@ -34,7 +34,7 @@ AGENT-BRIDGE — PROGRESS LOG
           launcher spawns with the restricted env (smoke).
   EXPECT: every out-of-allowlist call refused; allowlisted pass; isolation launcher starts. Green.
 
-[todo] F4.4 — Prompt-injection regression eval harness (+ CI gate)  (verify: rules-based)
+[done] F4.4 — Prompt-injection regression eval harness (+ CI gate)  (verify: rules-based)
   GOAL:   A harness that runs the F4.1 eval set through the full defense stack (wrapper+persona +
           F4.2 DLP + F4.3 capability guard), computes a pass rate, and gates CI at a threshold.
           Two layers: (a) DETERMINISTIC structural checks that always run (DLP blocks each exfil
@@ -128,6 +128,33 @@ AGENT-BRIDGE — PROGRESS LOG
 ################################################################################
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
+
+== 2026-06-19 — Session 13: F4.4 injection regression harness + CI gate — P4 COMPLETE ==
+Done (F4.4 PASSED):
+- packages/client/src/injection-harness.ts: runInjectionHarness() scores every INJECTION_EVALS
+  case via its probe against the REAL defenses — wrap probe -> wrapNeutralizes (delimited+escaped,
+  one closing tag); dlp probe -> EgressFilter.inspect(secret) finds it; capability probe ->
+  CapabilityGuard refuses the tool. assertInjectionGate(1.0) throws InjectionGateError below
+  threshold = the CI gate (runs inside `npm test` -> init.sh runs it across all workspaces).
+  `defenses` toggles let tests prove the gate bites. runLiveInjectionEval(ask) = OPTIONAL
+  behavioral pass (off by default, not in the gate).
+- injection-evals.ts: added machine-readable InjectionProbe to all 14 cases (wrap x7 incl the
+  </untrusted> delimiter break + system-prompt/config leaks; dlp x3 = openai key / openssh private
+  key / absolute home path; capability x4 = Bash / Read / WebFetch / mcp__filesystem__write_file).
+
+Evidence (./init.sh exit 0): validator 39 + client 81 (+7 injection-harness.test) + mcp 16 = 136,
+0 fail. Tests: all-on -> 100% defended (14/14); each of wrap/dlp/capability covers >=1 case;
+disabling wrap/dlp/capability each drops the rate and fails EXACTLY that probe's cases;
+assertInjectionGate passes green and throws InjectionGateError when any single defense is disabled.
+
+*** PHASE P4 (security hardening) COMPLETE: F4.1 L2 wrapping + F4.2 L3 DLP + F4.3 L1 capability
+isolation + F4.4 regression gate. The 5-layer model (DESIGN §4) now has L1/L2/L3 enforced in code
+with a deterministic CI gate; L0 (connection/auth) shipped in P2; L4 (memory isolation) is P5. ***
+
+NEXT (resume the roadmap top-to-bottom): P5 — persona memory. F5.1 persona profile format +
+loader (curated, no secrets), then F5.2 persistent namespaced hard-walled local memory store
+(replaces the F3.1 in-memory placeholder). Then P6 autopilot, then P7 (Host SDK + AI-Town adapter
+= first real external link).
 
 == 2026-06-19 — Session 12: F4.3 capability isolation enforcement + isolation_mode:process ==
 P4 L1. Programmatic default-deny so the avatar sub-context can call ONLY the ABP/persona tools,

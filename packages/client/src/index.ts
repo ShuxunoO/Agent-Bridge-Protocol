@@ -34,3 +34,11 @@ export {
 } from "./capability.ts";
 export { isolatedEnv, launchIsolated, BASE_ENV_KEYS } from "./isolation.ts";
 export type { IsolationOptions } from "./isolation.ts";
+export {
+  runInjectionHarness,
+  assertInjectionGate,
+  runLiveInjectionEval,
+  InjectionGateError,
+} from "./injection-harness.ts";
+export type { DefenseToggles, CaseResult, HarnessReport, HarnessOptions, AskFn } from "./injection-harness.ts";
+export type { InjectionProbe } from "./injection-evals.ts";
