@@ -114,9 +114,10 @@
         {
           "id": "F2.3",
           "title": "Event loop (dispatch events, submit actions, turn deadlines)",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "e2e",
+          "evidence": "packages/client/src/driver.ts: Driver (EventEmitter). start() swaps the transport validator to AbpValidator(pinnedProfile) -> composed data-plane validation now active on the live stream. Dispatches type==event by kind (emit 'event'+'<kind>'), tracks lastEventSeq (resume cursor). Turn-style events (turnKind, default 'turn') -> onTurn handler raced against deadline_ms (relative to receipt); decision action submitted with corr=turn id; null/undefined or timeout -> noop (noopOnTimeout default true) + 'turn_timeout' emitted; settled-guard prevents double-submit. #sendAction enforces session.assertCan (capability scope) + turn.allowed_actions membership before transport.send (which re-validates profile data). act() = proactive action (no corr), requires proactive capability. Also added WssTransport.setValidate(). Verified ./init.sh exit 0: tsc clean; client 36/36 (incl 7 driver e2e vs in-process mock ws host) + validator 39/39 = 75. Driver e2e: dispatch-by-kind + lastEventSeq tracking; turn->say submitted w/ corr=evt-5; deadline->turn_timeout+noop(corr); action outside allowed_actions -> error, not sent; invalid profile data on the wire -> 'invalid', not dispatched (proves validator swap); proactive emote no corr; act() without proactive cap throws.",
           "steps": ["subscribe events; dispatch by kind", "submit actions correlated to turns", "respect deadlines/noop"],
           "depends_on": ["F2.2"]
         }

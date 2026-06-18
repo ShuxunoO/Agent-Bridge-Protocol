@@ -1,6 +1,38 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 7: F2.3 event loop — P2 client SDK complete ==
+Done (F2.3 PASSED):
+- WssTransport.setValidate(): swap the validator at runtime (was readonly).
+- packages/client/src/driver.ts: Driver (EventEmitter). start() swaps the transport validator to
+  AbpValidator(pinnedProfile) so composed data-plane validation runs on the LIVE stream (Core
+  envelope + profile events[kind].data). Dispatches type==event by kind (emits "event" and
+  "<kind>"), tracks lastEventSeq = max event.seq (resume cursor). Turn-style events (turnKind,
+  default "turn"): onTurn(turnData, ctx) raced against deadline_ms (RELATIVE to receipt); the
+  returned action is submitted with corr = turn event id; null/undefined decision or deadline
+  timeout -> noop (noopOnTimeout default true) + "turn_timeout" emitted; a settled-guard prevents
+  double-submit if the handler resolves late. #sendAction enforces session.assertCan (capability
+  scope) AND turn.allowed_actions membership before transport.send (which re-validates profile
+  data). act() submits a proactive action (no corr) and requires the proactive capability.
+  Non-event types -> "host_error"/"bye"/"control".
+
+Evidence (./init.sh exit 0): tsc clean; client 36/36, validator 39/39 (75 total).
+- Driver e2e (vs in-process mock ws host that pairs then streams events): dispatch-by-kind +
+  lastEventSeq==2 after seqs 0/1/2; turn -> say submitted with corr=evt-5 and exact data; deadline
+  (30ms) with a never-resolving handler -> turn_timeout + noop(corr=evt-8); onTurn action outside
+  allowed_actions -> "error" emitted and NOT sent; a "message" event with missing required fields
+  -> transport "invalid" (AbpValidator), never dispatched (proves the post-pairing validator swap);
+  proactive emote submitted with no corr; act() on a session lacking proactive throws.
+
+P2 (client SDK / connector core) COMPLETE: F2.1 transport, F2.2 pairing/auth, F2.3 event loop.
+
+Gotcha: in tests, `const wss = new WebSocketServer(opts, () => resolve({wss,...}))` self-references
+wss inside its initializer -> TS7022; annotate `const wss: WebSocketServer = ...`.
+
+NEXT: P3 — MCP surface (Claude Code reference). F3.1: MCP server tools over the client SDK
+(link/perceive/wait_for_event/say/act/persona_memory); wait_for_event long-poll returns on events;
+tool I/O unit tests. Then F3.2 Claude Code restricted profile + manual e2e.
+
 == 2026-06-18 — Session 6: F2.2 pairing/auth (keypair, challenge-sign, scoped token, resume) ==
 Client SDK auth layer.
 

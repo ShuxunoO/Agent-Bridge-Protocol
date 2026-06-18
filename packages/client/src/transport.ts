@@ -32,7 +32,7 @@ function isLoopback(host: string): boolean {
  */
 export class WssTransport extends EventEmitter {
   readonly #url: string;
-  readonly #validate: Validate;
+  #validate: Validate;
   readonly #headers?: Record<string, string>;
   #ws?: WebSocket;
 
@@ -108,6 +108,15 @@ export class WssTransport extends EventEmitter {
       throw new Error(`refusing to send oversize message: ${bytes} bytes exceeds ${MAX_MESSAGE_BYTES}`);
     }
     this.#ws.send(text);
+  }
+
+  /**
+   * Swap the validator. After pairing, the connector replaces the default Core
+   * validator with an AbpValidator bound to the pinned profile so the data plane
+   * is validated against the profile too (§4.3, §5).
+   */
+  setValidate(fn: Validate): void {
+    this.#validate = fn;
   }
 
   /** True once the socket is open. */

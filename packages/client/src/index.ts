@@ -7,3 +7,13 @@ export { makeEnvelope } from "./envelope.ts";
 export type { Envelope } from "./envelope.ts";
 export { pair, sendResume, PairingError } from "./pairing.ts";
 export type { PairOptions, PairResult } from "./pairing.ts";
+export { Driver } from "./driver.ts";
+export type {
+  DriverOptions,
+  AbpEvent,
+  EventContext,
+  ActionInput,
+  TurnDecision,
+  TurnHandler,
+  EventHandler,
+} from "./driver.ts";
