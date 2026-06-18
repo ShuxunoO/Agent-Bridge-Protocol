@@ -65,7 +65,7 @@ AGENT-BRIDGE — PROGRESS LOG
 
 --- PHASE P6: autopilot + config ---
 
-[todo] F6.1 — Connection daemon (persistent link + reconnect)  (verify: e2e)
+[done] F6.1 — Connection daemon (persistent link + reconnect)  (verify: e2e)
   GOAL:   A daemon that keeps the outbound link up: on drop it reconnects with exponential backoff,
           re-pairs/resumes, and sends resume{last_event_seq} so the host backfills or snapshots
           (§4.3.2) — no silently-missed world state.

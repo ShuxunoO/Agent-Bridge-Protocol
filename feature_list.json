@@ -228,9 +228,10 @@
         {
           "id": "F6.1",
           "title": "Connection daemon (persistent link + reconnect)",
-          "status": "todo",
+          "status": "passed",
           "priority": "medium",
           "verification": "e2e",
+          "evidence": "packages/client/src/daemon.ts: ConnectionDaemon — start() connects+pairs+drives; on an unexpected transport 'close' it reconnects with exponential backoff (backoffMs, last repeats), re-attaches the Driver (existing session/profile, no re-pair), and sends resume{last_event_seq} so the host backfills/snapshots (§4.3.2). Tracks lastEventSeq as the resume cursor. Events: connected/reconnecting/reconnected/event/error/giveup/stopped. stop() = clean hot-unplug (off close listener, stop driver, close transport, no further reconnect). Verified ./init.sh exit 0: validator 39 + client 95 (+2 daemon.test) + mcp 16 = 150, 0 fail. daemon e2e vs a resumable mock ws host: stream ticks seq 0/1/2 -> lastEventSeq 2; force socket drop -> daemon reconnects (conns>=2) and sends resume with last_event_seq==2 -> host streams seq 3 -> lastEventSeq 3. stop() test: after stop no 'reconnecting' fires and no new host connection.",
           "steps": ["persistent outbound link w/ backoff", "reconnect test"],
           "depends_on": ["F2.3"]
         },

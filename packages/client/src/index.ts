@@ -25,6 +25,8 @@ export type { PersonaProfile } from "./persona.ts";
 export { loadPersonaProfile, loadPersonaProfileFile, PERSONA_LIMITS } from "./persona-profile.ts";
 export type { PersonaLoadResult } from "./persona-profile.ts";
 export { PersonaMemoryStore, defaultMemoryDir, safeNamespace } from "./memory.ts";
+export { ConnectionDaemon } from "./daemon.ts";
+export type { DaemonOptions } from "./daemon.ts";
 export { INJECTION_EVALS, INJECTION_CATEGORIES } from "./injection-evals.ts";
 export type { InjectionEval, InjectionCategory } from "./injection-evals.ts";
 export {
