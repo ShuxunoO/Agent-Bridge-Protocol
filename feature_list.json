@@ -165,9 +165,10 @@
         {
           "id": "F4.2",
           "title": "Egress DLP filter (deterministic)",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "rules-based",
+          "evidence": "packages/client/src/dlp.ts: EgressFilter (deterministic, high-precision rules: private_key/AWS AKIA-ASIA/openai sk-/github ghp_+pat/slack xox/google AIza/JWT/Bearer/home+windows path/large_base64; plus optional maxLength->oversize). modes block (fail-closed) | redact ([REDACTED:type]). applyEgress(filter, clientAuthoredPaths, data) scans the profile's x-abp-trust:client_authored leaves (path walker supports /a/b and []). RateLimiter (sliding window). Wired into the single outbound choke point Driver.#sendAction: rate-limit -> egress on client_authored paths (block throws / redact sets data.redacted=true) -> send. DLP is ON BY DEFAULT (new EgressFilter(), block mode) so Connector.say (MCP) is protected for free; pass egress:null to disable. Verified ./init.sh exit 0: tsc clean; client 60/60 (17 dlp unit + 4 driver DLP e2e), mcp 14, validator 39 = 113. dlp tests: each secret type detected; clean prose -> no findings; redact preserves surroundings; applyEgress block/redact/clean; RateLimiter window. driver tests: default-block refuses a say leaking ghp_ token (error, not sent); redact mode rewrites AKIA + sets redacted; clean text passes untouched; rate limit max=1 throws on 2nd.",
           "steps": ["scan say.text/emote for secrets/keys/JWT/cloud creds/abs paths/large base64", "block or redact + rate/size limits", "unit: secrets blocked, clean passes"],
           "depends_on": ["F2.3"]
         },

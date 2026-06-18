@@ -1,6 +1,32 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 10: F4.2 egress DLP (deterministic) — P4 start ==
+Done (F4.2 PASSED):
+- packages/client/src/dlp.ts: EgressFilter (L3 egress data-leak prevention, SPEC §6.4). Deterministic,
+  high-precision secret rules: private_key, AWS AKIA/ASIA, openai sk-, github ghp_/pat, slack xox,
+  google AIza, JWT, Bearer, unix+windows home paths, large_base64; optional maxLength -> "oversize".
+  Modes: block (fail-closed, default) | redact ([REDACTED:type]). applyEgress(filter, paths, data)
+  scans the profile's x-abp-trust:client_authored leaves (path walker handles /a/b and []).
+  RateLimiter (sliding window) for outbound actions.
+- Wired into the single outbound choke point Driver.#sendAction: capability check -> allowed_actions
+  -> rate limit -> egress (block throws; redact rewrites + sets data.redacted=true) -> transport.send.
+  DLP is ON BY DEFAULT (block mode), so Connector.say (MCP) and autopilot (F6) get it for free; pass
+  egress:null to disable, or egress:new EgressFilter({mode:"redact"}) to redact instead.
+
+Evidence (./init.sh exit 0): tsc clean; client 60/60, mcp 14/14, validator 39/39 = 113 total.
+- dlp.test.ts (17): each secret type detected; clean prose -> 0 findings; large_base64; oversize;
+  redact preserves surrounding text; applyEgress block/redact/clean; RateLimiter window budget.
+- driver.test.ts (+4): default-block refuses a say leaking a ghp_ token (emits error, NOT sent);
+  redact mode rewrites an AKIA key and sets redacted:true; clean text passes untouched; rate limit
+  max=1 throws on the 2nd action.
+
+NEXT (P4 continues): F4.1 — untrusted tagging + locked persona prompt + injection eval set. Build a
+wrapper that, from PinnedProfile.trust.events[kind].untrusted, delimits foreign text as data before
+it reaches the model, ship the locked persona prompt (examples/persona.md -> enforced), and a small
+injection eval set (exfil / role-override / tool-coercion). Then F4.3 (capability isolation
+enforcement) and F4.4 (injection regression harness + CI gate). F4.4 depends on F4.1+F4.2+F4.3.
+
 == 2026-06-18 — Session 9: F3.2 Claude Code restricted profile + docs + e2e — P3 COMPLETE ==
 Done (F3.2 PASSED):
 - packages/mcp/examples/.mcp.json: registers the agent-bridge stdio MCP server (node src/bin.ts).

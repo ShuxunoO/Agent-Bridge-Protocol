@@ -3,6 +3,7 @@ import { AbpValidator, type PinnedProfile } from "@agent-bridge/validator";
 import { WssTransport } from "./transport.ts";
 import { Session } from "./session.ts";
 import { makeEnvelope } from "./envelope.ts";
+import { EgressFilter, RateLimiter, applyEgress } from "./dlp.ts";
 
 /** A data-plane event payload (Core shape; `data` is profile-defined). */
 export type AbpEvent = { kind: string; seq: number; data: Record<string, unknown> };
@@ -30,6 +31,10 @@ export type DriverOptions = {
   turnKind?: string;
   /** Send an explicit noop when a turn deadline elapses (default true). */
   noopOnTimeout?: boolean;
+  /** Egress DLP filter for client-authored fields. Default: new EgressFilter() (block mode). null disables. */
+  egress?: EgressFilter | null;
+  /** Client-side outbound action rate limit (defense-in-depth). Default: none. */
+  rateLimit?: { max: number; windowMs: number };
 };
 
 /**
@@ -51,6 +56,8 @@ export class Driver extends EventEmitter {
   readonly #onEvent?: EventHandler;
   readonly #turnKind: string;
   readonly #noopOnTimeout: boolean;
+  readonly #egress: EgressFilter | null;
+  readonly #rateLimiter: RateLimiter | null;
   #lastSeq = -1;
   #started = false;
   #currentTurn: { id: string; allowed: Set<string> | null; settle: () => boolean } | null = null;
@@ -67,6 +74,8 @@ export class Driver extends EventEmitter {
     this.#onEvent = opts.onEvent;
     this.#turnKind = opts.turnKind ?? "turn";
     this.#noopOnTimeout = opts.noopOnTimeout ?? true;
+    this.#egress = opts.egress === undefined ? new EgressFilter() : opts.egress;
+    this.#rateLimiter = opts.rateLimit ? new RateLimiter(opts.rateLimit.max, opts.rateLimit.windowMs) : null;
   }
 
   /** Swap in composed validation and begin dispatching inbound messages. */
@@ -191,6 +200,22 @@ export class Driver extends EventEmitter {
     if (allowed && !allowed.has(action.kind)) {
       throw new Error(`forbidden: action "${action.kind}" is not in this turn's allowed_actions`);
     }
-    this.#t.send(makeEnvelope("action", { kind: action.kind, data: action.data ?? {} }, { session: this.#session.token, corr }));
+    if (this.#rateLimiter && !this.#rateLimiter.allow(Date.now())) {
+      throw new Error("rate_limited: outbound action rate exceeded");
+    }
+    let data = (action.data ?? {}) as Record<string, unknown>;
+    if (this.#egress) {
+      const paths = this.#profile.trust.actions[action.kind]?.client_authored ?? [];
+      if (paths.length > 0) {
+        const res = applyEgress(this.#egress, paths, data);
+        if (res.blocked) {
+          throw new Error(`egress blocked: client-authored field contains ${[...new Set(res.findings.map((f) => f.type))].join(", ")}`);
+        }
+        if (res.redacted) {
+          data = { ...res.data, redacted: true };
+        }
+      }
+    }
+    this.#t.send(makeEnvelope("action", { kind: action.kind, data }, { session: this.#session.token, corr }));
   }
 }

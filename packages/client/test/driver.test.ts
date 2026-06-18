@@ -10,6 +10,7 @@ import {
   Session,
   pair,
   Driver,
+  EgressFilter,
   type TurnHandler,
   type EventHandler,
 } from "../src/index.ts";
@@ -46,7 +47,7 @@ function startServer(onConn: (ws: WebSocket) => void): Promise<{ wss: WebSocketS
   });
 }
 
-type ExtraOpts = { onTurn?: TurnHandler; onEvent?: EventHandler; turnKind?: string; noopOnTimeout?: boolean };
+type ExtraOpts = { onTurn?: TurnHandler; onEvent?: EventHandler; turnKind?: string; noopOnTimeout?: boolean; egress?: EgressFilter | null; rateLimit?: { max: number; windowMs: number } };
 
 type Setup = {
   wss: WebSocketServer;
@@ -211,6 +212,71 @@ test("respond() enforces turn.allowed_actions", TIMEOUT, async () => {
     host.sendEvent("turn", 6, { deadline_ms: 2000, allowed_actions: ["noop"] });
     await turnGot;
     assert.throws(() => driver.respond({ kind: "say", data: { conversation_id: "c1", text: "no" } }), /allowed_actions/);
+  } finally {
+    teardown();
+  }
+});
+
+test("egress DLP (default block) refuses a say leaking a secret", TIMEOUT, async () => {
+  const host = drivableHost();
+  const { driver, teardown } = await setup(host, {
+    onTurn: () => ({ kind: "say", data: { conversation_id: "c1", text: "my token is ghp_0123456789abcdefghijklmnopqrstuvwxyz" } }),
+  });
+  try {
+    const errored = once(driver, "error");
+    host.sendEvent("turn", 9, { deadline_ms: 2000, allowed_actions: ["say", "noop"] });
+    const [err] = await errored;
+    assert.match((err as Error).message, /egress blocked/);
+    await flush();
+    assert.equal(host.actions.find((a) => a.payload.kind === "say"), undefined);
+  } finally {
+    teardown();
+  }
+});
+
+test("egress DLP (redact mode) rewrites the secret and sets redacted", TIMEOUT, async () => {
+  const host = drivableHost();
+  const { driver, teardown } = await setup(host, {
+    egress: new EgressFilter({ mode: "redact" }),
+    onTurn: () => ({ kind: "say", data: { conversation_id: "c1", text: "key AKIAIOSFODNN7EXAMPLE inside" } }),
+  });
+  try {
+    host.sendEvent("turn", 10, { deadline_ms: 2000, allowed_actions: ["say"] });
+    await flush();
+    const say = host.actions.find((a) => a.payload.kind === "say");
+    assert.ok(say);
+    assert.match(say!.payload.data.text as string, /\[REDACTED:aws_access_key_id\]/);
+    assert.equal(say!.payload.data.redacted, true);
+  } finally {
+    teardown();
+  }
+});
+
+test("egress DLP lets clean text through", TIMEOUT, async () => {
+  const host = drivableHost();
+  const { driver, teardown } = await setup(host, {
+    onTurn: () => ({ kind: "say", data: { conversation_id: "c1", text: "lovely afternoon, isn't it" } }),
+  });
+  try {
+    host.sendEvent("turn", 11, { deadline_ms: 2000, allowed_actions: ["say"] });
+    await flush();
+    const say = host.actions.find((a) => a.payload.kind === "say");
+    assert.ok(say);
+    assert.equal(say!.payload.data.text, "lovely afternoon, isn't it");
+    assert.equal(say!.payload.data.redacted, undefined);
+  } finally {
+    teardown();
+  }
+});
+
+test("outbound rate limit is enforced", TIMEOUT, async () => {
+  const host = drivableHost();
+  const { driver, teardown } = await setup(host, { rateLimit: { max: 1, windowMs: 10000 } });
+  try {
+    driver.act({ kind: "emote", data: { emote: "wave" } });
+    assert.throws(() => driver.act({ kind: "emote", data: { emote: "nod" } }), /rate_limited/);
+    await flush();
+    assert.equal(host.actions.filter((a) => a.payload.kind === "emote").length, 1);
   } finally {
     teardown();
   }
