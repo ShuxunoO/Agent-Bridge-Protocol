@@ -1,0 +1,26 @@
+{
+  "name": "@agent-bridge/mcp",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "ABP/1 MCP surface (Claude Code reference). F3.1: link/perceive/wait_for_event/say/act/persona_memory tools over the client SDK.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "agent-bridge-mcp": "./src/bin.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test --test-force-exit test/*.test.ts"
+  },
+  "dependencies": {
+    "@agent-bridge/client": "*",
+    "@agent-bridge/validator": "*",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  }
+}

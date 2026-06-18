@@ -53,6 +53,7 @@ export class Driver extends EventEmitter {
   readonly #noopOnTimeout: boolean;
   #lastSeq = -1;
   #started = false;
+  #currentTurn: { id: string; allowed: Set<string> | null; settle: () => boolean } | null = null;
 
   readonly #onMessage = (msg: { type: string; id: string; corr?: string; payload: Record<string, unknown> }) => this.#dispatch(msg);
   readonly #onInvalid = (info: unknown) => this.emit("invalid", info);
@@ -90,12 +91,29 @@ export class Driver extends EventEmitter {
     return this.#lastSeq;
   }
 
+  /** The id of the turn currently awaiting a response, or null. */
+  get currentTurnId(): string | null {
+    return this.#currentTurn?.id ?? null;
+  }
+
   /** Submit a proactive action (outside a turn). Requires the `proactive` capability. */
   act(action: ActionInput): void {
     if (!this.#session.proactive) {
       throw new Error('forbidden: session lacks the "proactive" capability');
     }
     this.#sendAction(action, undefined, null);
+  }
+
+  /**
+   * Respond to the current turn (manual mode — when no onTurn handler is set, e.g. the
+   * MCP surface where the agent decides). Submits the action correlated to the turn,
+   * enforcing capability scope and the turn's allowed_actions, and settles the turn.
+   */
+  respond(action: ActionInput): void {
+    const ct = this.#currentTurn;
+    if (!ct) throw new Error("no active turn to respond to");
+    if (!ct.settle()) throw new Error("turn already settled");
+    this.#sendAction(action, ct.id, ct.allowed);
   }
 
   #dispatch(msg: { type: string; id: string; corr?: string; payload: Record<string, unknown> }): void {
@@ -127,28 +145,33 @@ export class Driver extends EventEmitter {
     const data = ev.data;
     const deadline = typeof data.deadline_ms === "number" ? data.deadline_ms : 0;
     const allowed = Array.isArray(data.allowed_actions) ? new Set(data.allowed_actions as string[]) : null;
+    const turnId = ctx.id;
     let settled = false;
+    let timer: ReturnType<typeof setTimeout>;
     const settle = (): boolean => {
       if (settled) return false;
       settled = true;
       clearTimeout(timer);
+      if (this.#currentTurn?.id === turnId) this.#currentTurn = null;
       return true;
     };
     const sendDecision = (action: ActionInput | null): void => {
       try {
-        if (action) this.#sendAction(action, ctx.id, allowed);
-        else if (this.#canSend("noop", allowed)) this.#sendAction({ kind: "noop", data: {} }, ctx.id, allowed);
+        if (action) this.#sendAction(action, turnId, allowed);
+        else if (this.#canSend("noop", allowed)) this.#sendAction({ kind: "noop", data: {} }, turnId, allowed);
       } catch (e) {
         this.emit("error", e);
       }
     };
-    const timer = setTimeout(() => {
+    // Expose the turn so respond() (manual mode) can settle + correlate it.
+    this.#currentTurn = { id: turnId, allowed, settle };
+    timer = setTimeout(() => {
       if (!settle()) return;
       this.emit("turn_timeout", ctx);
       if (this.#noopOnTimeout) sendDecision(null);
     }, deadline);
 
-    if (!this.#onTurn) return; // no handler -> rely on the timeout path
+    if (!this.#onTurn) return; // manual mode: respond() settles it, or the deadline expires it
 
     Promise.resolve(this.#onTurn(data, ctx))
       .then((decision) => {

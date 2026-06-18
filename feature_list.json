@@ -130,9 +130,10 @@
         {
           "id": "F3.1",
           "title": "MCP server tools (link/perceive/wait_for_event/say/act/persona_memory)",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "e2e",
+          "evidence": "New package @agent-bridge/mcp. connector.ts: Connector wraps one ABP session (transport+pair+Driver in manual turn mode, noopOnTimeout:false); buffers events for long-poll, caches last perception, tracks turns. Methods link/perceive/waitForEvent/say/act/personaMemory. waitForEvent: drains buffer else registers a waiter w/ timeout (long-poll). say/act submit via driver.respond (corr=current turn) or driver.act (proactive). persona_memory is a local in-memory placeholder (F5.2 = persistent hard-walled store). server.ts: createServer() registers the 6 tools (abp_link/perceive/wait_for_event/say/act/persona_memory) on McpServer w/ zod input schemas, returning JSON text content; tool errors -> isError. bin.ts: stdio entry. Driver refactor (F2.3 carry): added currentTurnId getter + respond()/manual-mode turn settling so the agent (not auto-onTurn) answers turns. Verified ./init.sh exit 0: tsc clean; mcp 13/13 + client 39/39 + validator 39/39 = 91. MCP tests use a real MCP Client over InMemoryTransport: lists exactly the 6 tools; persona_memory round-trips; abp_link+abp_wait_for_event+abp_perceive drive the FULL stack (MCP client -> server -> connector -> client SDK -> wss -> mock host); pre-link tool call -> isError. Connector e2e (vs mock ws host): link returns role/caps/profile; perceive snapshot; wait_for_event buffered/long-poll/timeout; say correlates to turn (corr=evt-3); act proactive (no corr).",
           "steps": ["MCP server over the client SDK", "tool I/O unit tests", "wait_for_event long-poll returns on events"],
           "depends_on": ["F2.3"]
         },

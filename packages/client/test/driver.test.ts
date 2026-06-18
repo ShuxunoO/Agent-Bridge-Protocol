@@ -175,6 +175,47 @@ test("proactive act() submits without corr", TIMEOUT, async () => {
   }
 });
 
+test("manual mode: respond() submits correlated to the current turn and clears it", TIMEOUT, async () => {
+  const host = drivableHost();
+  const { driver, teardown } = await setup(host, { noopOnTimeout: false }); // no onTurn -> manual
+  try {
+    const turnGot = once(driver, "turn");
+    host.sendEvent("turn", 4, { deadline_ms: 2000, allowed_actions: ["say", "noop"] });
+    await turnGot;
+    assert.equal(driver.currentTurnId, "evt-4");
+    driver.respond({ kind: "say", data: { conversation_id: "c1", text: "manual hi" } });
+    await flush();
+    const say = host.actions.find((a) => a.payload.kind === "say");
+    assert.ok(say);
+    assert.equal(say!.corr, "evt-4");
+    assert.equal(driver.currentTurnId, null);
+  } finally {
+    teardown();
+  }
+});
+
+test("respond() with no active turn throws", TIMEOUT, async () => {
+  const { driver, teardown } = await setup(drivableHost(), { noopOnTimeout: false });
+  try {
+    assert.throws(() => driver.respond({ kind: "noop", data: {} }), /no active turn/);
+  } finally {
+    teardown();
+  }
+});
+
+test("respond() enforces turn.allowed_actions", TIMEOUT, async () => {
+  const host = drivableHost();
+  const { driver, teardown } = await setup(host, { noopOnTimeout: false });
+  try {
+    const turnGot = once(driver, "turn");
+    host.sendEvent("turn", 6, { deadline_ms: 2000, allowed_actions: ["noop"] });
+    await turnGot;
+    assert.throws(() => driver.respond({ kind: "say", data: { conversation_id: "c1", text: "no" } }), /allowed_actions/);
+  } finally {
+    teardown();
+  }
+});
+
 test("act() requires the proactive capability", TIMEOUT, async () => {
   const host = drivableHost();
   const { t, profile, session, teardown } = await setup(host);

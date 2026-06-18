@@ -1,6 +1,41 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 8: F3.1 MCP surface (Claude Code reference) ==
+P3 start. New package @agent-bridge/mcp exposes the client SDK as MCP tools.
+
+Driver refactor (carry on F2.3): added currentTurnId getter + respond() so a turn can be answered
+MANUALLY (by the agent via tools) instead of only via an auto onTurn handler. #handleTurn now stores
+{id,allowed,settle} on #currentTurn; respond() settles+correlates; the deadline timer still expires
+the turn. Re-ran driver tests: 10/10 (added 3: manual respond, respond-no-turn, respond-allowed).
+
+Done (F3.1 PASSED):
+- src/connector.ts: Connector wraps ONE ABP session (WssTransport + pair + Driver in manual mode,
+  noopOnTimeout:false). Buffers inbound events for long-poll, caches last perception, surfaces turns
+  as events. Verbs: link / perceive / waitForEvent / say / act / personaMemory.
+  * waitForEvent: returns a buffered matching event immediately, else registers a waiter that
+    resolves on the next match or {timeout:true} after timeoutMs (default 30s) = the long-poll.
+  * say/act: driver.respond (corr = current turn) if a turn is open, else driver.act (proactive).
+  * personaMemory: in-memory get/set/delete/list PLACEHOLDER — F5.2 replaces with the persistent,
+    namespaced, hard-walled store. Marked in code.
+- src/server.ts: createServer(connector) registers the 6 tools on McpServer (zod input schemas),
+  JSON text content, tool errors -> {isError:true}. src/bin.ts: stdio entry (agent-bridge-mcp).
+
+Evidence (./init.sh exit 0): tsc clean; mcp 13/13 + client 39/39 + validator 39/39 = 91 total.
+- server.test.ts uses a REAL MCP Client over InMemoryTransport: listTools == exactly the 6 tools;
+  persona_memory set/get round-trips; abp_link + abp_wait_for_event + abp_perceive drive the FULL
+  stack (MCP client -> server -> connector -> client SDK -> wss -> mock host); pre-link call ->
+  isError(/not linked/).
+- connector.test.ts (vs mock ws host): link returns role/caps/profile; perceive snapshot; wait_for_
+  event buffered + long-poll(resolves on arrival) + timeout({timeout:true}); say correlates to turn
+  (corr=evt-3, exact data); act proactive (no corr); persona_memory CRUD.
+
+Deps added: @modelcontextprotocol/sdk ^1.29, zod ^3.
+
+NEXT: F3.2 — Claude Code restricted profile (allowlist only the abp_* + persona tools; no fs/shell/
+other MCP) + docs (how to add the MCP server to Claude Code) + manual e2e driving an avatar. Then
+P4 security hardening can consume profile.trust paths (F4.1 wrap untrusted, F4.2 egress DLP on say).
+
 == 2026-06-18 — Session 7: F2.3 event loop — P2 client SDK complete ==
 Done (F2.3 PASSED):
 - WssTransport.setValidate(): swap the validator at runtime (was readonly).
