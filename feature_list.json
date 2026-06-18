@@ -104,9 +104,10 @@
         {
           "id": "F2.2",
           "title": "Pairing/auth (keypair, challenge-sign, scoped token, resume)",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "rules-based",
+          "evidence": "packages/client/src: keypair.ts (Ed25519 via node:crypto; Keypair.generate/fromPem/loadOrCreate[0600 PEM]; raw pubkey as JWK x base64url; sign(nonce)->base64url; verifySignature() for hosts/tests). session.ts (Session: can()/assertCan capability scope, proactive flag, isExpired vs expires_at, authHeader Bearer). envelope.ts (makeEnvelope: randomUUID id + Date.now ts). pairing.ts (pair(): hello->hello_ack pin-by-hash->pair_request->[pair_challenge->sign->pair_request w/ sig]->pair_result; builds scoped Session; asserts pair_result.profile==pinned else profile_mismatch; PairingError carries ABP code; waitFor rejects on error/invalid/timeout; sendResume sends token in envelope.session + last_event_seq). Verified ./init.sh exit 0: tsc clean; 29/29 client tests (7 keypair + 6 session + 6 pairing + 10 transport). Forgery: tampered sig / wrong-nonce sig / wrong-key sig all rejected by verifySignature; protocol-level host rejection -> pair() throws unauthorized. Scope: can/assertCan + capability gate. Expiry: isExpired boundary. Pinning in handshake: tampered hash -> profile_mismatch; unknown profile w/o approval -> profile_unsupported. Resume: token in envelope + seq cursor in payload, asserted host-side. Happy path challenge->sign->scoped session w/ role+caps+profile.",
           "steps": ["keypair gen/load", "sign challenge; send pair_request", "store+use scoped token; resume", "unit: scope/expiry/forgery rejected"],
           "depends_on": ["F2.1"]
         },

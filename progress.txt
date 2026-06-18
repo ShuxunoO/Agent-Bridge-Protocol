@@ -1,6 +1,42 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 6: F2.2 pairing/auth (keypair, challenge-sign, scoped token, resume) ==
+Client SDK auth layer.
+
+Done (F2.2 PASSED):
+- keypair.ts: Ed25519 via node:crypto. Keypair.generate / fromPem / loadOrCreate (persists PKCS#8
+  PEM at 0600). Public key transmitted as the raw 32-byte key (JWK `x`, base64url) = pair_request
+  .pubkey. sign(nonce)->base64url. verifySignature(pubB64, msg, sigB64) for host/test use; returns
+  false (never throws) on malformed input.
+- session.ts: Session enforces the client side of token scoping — can()/assertCan (capability
+  scope), proactive flag, isExpired(now) vs expires_at, authHeader() (Bearer). Host still
+  re-validates server-side.
+- envelope.ts: makeEnvelope(type,payload,{session,corr}) with randomUUID id + Date.now ts.
+- pairing.ts: pair(transport,keypair,loader,opts) drives the handshake — hello -> hello_ack (pin
+  the inlined profile by content hash via ProfileLoader) -> pair_request -> [pair_challenge -> sign
+  nonce -> pair_request w/ pubkey+signature] -> pair_result. Builds the scoped Session; asserts
+  pair_result.profile == pinned profile else profile_mismatch. PairingError carries the ABP error
+  code. waitFor() rejects on error/invalid-frame/timeout (lockstep handshake). sendResume() emits
+  resume with the token in envelope.session + last_event_seq cursor.
+
+Evidence (./init.sh exit 0, fully green): tsc clean; client 29/29, validator 39/39 (68 total).
+- Forgery rejected: tampered signature, signature over a different nonce, and a different key's
+  signature all fail verifySignature; protocol-level host rejection -> pair() throws unauthorized.
+- Scope: can()/assertCan gate; expiry: isExpired boundary (999/1000/1001).
+- Pinning in handshake (e2e vs in-process mock ws host): happy path challenge->sign->scoped session
+  w/ role+caps(incl proactive)+profile; no-challenge path; tampered hash -> profile_mismatch;
+  unknown profile w/o approval -> profile_unsupported.
+- Resume: host records token in envelope.session and last_event_seq=7 in payload.
+
+Note: transport's validator is set at construction (Core default during pairing). F2.3 will swap in
+an AbpValidator once the profile is pinned (add a setValidate() on WssTransport) for composed
+data-plane validation in the event loop.
+
+NEXT: F2.3 — event loop: subscribe events and dispatch by kind; submit actions correlated to turns
+(corr = turn event id); respect deadline_ms (relative to receipt) + noop on timeout; swap transport
+validator to AbpValidator(pinnedProfile) post-pairing; track last_event_seq for resume.
+
 == 2026-06-18 — Session 5: F2.1 outbound wss transport + envelope (de)serialize ==
 Start of P2 (client SDK / connector). New package @agent-bridge/client.
 
