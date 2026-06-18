@@ -248,9 +248,10 @@
         {
           "id": "F6.3",
           "title": "Config + hot-unplug kill switch",
-          "status": "todo",
+          "status": "passed",
           "priority": "medium",
           "verification": "rules-based",
+          "evidence": "packages/mcp/src/avatar.ts: AvatarController(connector,{mode}) — config toggle setMode('in_the_loop'|'autopilot') (switching away from autopilot stops the loop; emits 'mode'); startAutopilot() only valid in autopilot mode; kill(reason) = hot-unplug: stop the loop, send a graceful `bye`, connector.close(), emit 'killed' — idempotent, and post-kill setMode/startAutopilot throw. Added Connector.bye(reason) (best-effort graceful bye envelope; never throws). Verified ./init.sh exit 0: validator 39 + client 95 + mcp 22 (+3 avatar.test) = 156, 0 fail. Tests: mode toggles emit in order, wrong-mode startAutopilot refused; kill sends bye (host records reason) + connector.linked false + idempotent + post-kill guards throw + perceive throws not-linked; kill while autopilot waiting resolves the run promptly (close() resolves the pending waiter) and running=false.",
           "steps": ["toggle in-the-loop vs autopilot", "hot unplug stops cleanly", "unit: toggling + kill switch"],
           "depends_on": ["F6.2"]
         }

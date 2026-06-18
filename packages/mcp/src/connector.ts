@@ -1,5 +1,5 @@
 import { ProfileLoader, PinnedProfile, type ApproveFn } from "@agent-bridge/validator";
-import { WssTransport, Keypair, pair, Driver, wrapUntrusted, PersonaMemoryStore, type AbpEvent, type EventContext } from "@agent-bridge/client";
+import { WssTransport, Keypair, pair, Driver, wrapUntrusted, PersonaMemoryStore, makeEnvelope, type AbpEvent, type EventContext } from "@agent-bridge/client";
 
 /** Label the origin of an event's untrusted content (best-effort, for the wrapper's `source` attr). */
 function eventSource(ev: AbpEvent): string {
@@ -171,6 +171,17 @@ export class Connector {
         return { ok: true };
       case "list":
         return { keys: store.list() };
+    }
+  }
+
+  /** Send a graceful `bye` (hot-unplug) if the socket is open. Best-effort; never throws. */
+  bye(reason = "client disconnect"): void {
+    if (this.#transport?.isOpen) {
+      try {
+        this.#transport.send(makeEnvelope("bye", { reason }));
+      } catch {
+        // socket may race-close; teardown proceeds regardless
+      }
     }
   }
 

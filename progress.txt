@@ -80,7 +80,7 @@ AGENT-BRIDGE — PROGRESS LOG
           within its deadline, all actions pass DLP, and no out-of-allowlist tool call occurs.
   EXPECT: N turns driven autonomously; defenses active throughout; transcript captured. Green.
 
-[todo] F6.3 — Config + hot-unplug kill switch  (verify: rules-based)
+[done] F6.3 — Config + hot-unplug kill switch  (verify: rules-based)  ** P6 COMPLETE **
   GOAL:   Config to toggle user-in-the-loop vs autopilot; a hot-unplug kill switch that stops the
           loop cleanly, sends `bye`, and tears down transport/driver/daemon.
   TEST:   rules-based unit — toggling config switches mode; kill switch stops the loop, emits bye,
@@ -128,6 +128,25 @@ AGENT-BRIDGE — PROGRESS LOG
 ################################################################################
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
+
+== 2026-06-19 — Session 15: P6 autopilot (F6.1 daemon + F6.2 autopilot + F6.3 config/kill) ==
+F6.1 PASSED — packages/client/src/daemon.ts ConnectionDaemon: persistent outbound link; on drop,
+exponential-backoff reconnect + re-attach driver + resume{last_event_seq} (host backfills/
+snapshots §4.3.2); stop() clean hot-unplug. e2e: drop -> reconnect -> resume cursor==2 -> next event.
+F6.2 PASSED — packages/mcp/src/autopilot.ts Autopilot: autonomous loop waitForEvent(turn)->brain->
+route; runtime defenses at the choke point: L1 CapabilityGuard refuses out-of-allowlist tools (the
+runtime point F4.3 deferred), L3 DLP blocks secrets in say. e2e vs turn-driving host: 5 turns
+driven; Bash refused (never reaches host); ghp_ token say DLP-blocked.
+F6.3 PASSED — packages/mcp/src/avatar.ts AvatarController: setMode(in_the_loop|autopilot) toggle;
+kill() hot-unplug = stop loop + graceful bye (Connector.bye) + close + 'killed', idempotent,
+post-kill guards. Tests: toggle order; wrong-mode startAutopilot refused; kill sends bye(reason),
+tears down, idempotent; kill-while-running resolves the loop promptly.
+Evidence (./init.sh exit 0): validator 39 + client 95 (+2 daemon) + mcp 22 (+3 autopilot, +3
+avatar) = 156, 0 fail. (autopilot test made deterministic: timer-paced host + flush before assert.)
+*** PHASE P6 COMPLETE. P0–P6 done = 19/23 features. ***
+NEXT: P7 — Host SDK (F7.1) + AI-Town adapter (F7.2). PAUSED per user: discuss the approach before
+implementing (cross-repo, touches the real AI-Town engine). HOST-ADAPTER.md (in ai-town repo) has
+the mapping; abp.social/1 fits with no protocol changes.
 
 == 2026-06-19 — Session 14: P5 persona memory (F5.1 profile loader + F5.2 hard-walled store) ==
 F5.1 PASSED — packages/client/src/persona-profile.ts: loadPersonaProfile(doc) validates a closed
