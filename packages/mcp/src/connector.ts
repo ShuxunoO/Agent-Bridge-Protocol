@@ -1,5 +1,11 @@
-import { ProfileLoader, type ApproveFn } from "@agent-bridge/validator";
-import { WssTransport, Keypair, pair, Driver, type AbpEvent, type EventContext } from "@agent-bridge/client";
+import { ProfileLoader, PinnedProfile, type ApproveFn } from "@agent-bridge/validator";
+import { WssTransport, Keypair, pair, Driver, wrapUntrusted, type AbpEvent, type EventContext } from "@agent-bridge/client";
+
+/** Label the origin of an event's untrusted content (best-effort, for the wrapper's `source` attr). */
+function eventSource(ev: AbpEvent): string {
+  const from = (ev.data as { from_role?: { id?: unknown } }).from_role?.id;
+  return typeof from === "string" ? `role:${from}` : ev.kind;
+}
 
 /** An event as surfaced to the MCP agent (Core event + correlation id). */
 export type BufferedEvent = { kind: string; seq: number; data: Record<string, unknown>; id: string; corr?: string };
@@ -32,6 +38,7 @@ type Waiter = { kinds: Set<string> | null; resolve: (r: WaitResult) => void; tim
 export class Connector {
   #transport?: WssTransport;
   #driver?: Driver;
+  #profile?: PinnedProfile;
   #lastPerception: Record<string, unknown> | null = null;
   #queue: BufferedEvent[] = [];
   #waiters: Waiter[] = [];
@@ -61,12 +68,18 @@ export class Connector {
     driver.start();
     this.#transport = transport;
     this.#driver = driver;
+    this.#profile = profile;
     return { role: session.role, capabilities: [...session.capabilities], profile: session.profile };
   }
 
   #onEvent(ev: AbpEvent, ctx: EventContext): void {
-    const buffered: BufferedEvent = { kind: ev.kind, seq: ev.seq, data: ev.data, id: ctx.id, corr: ctx.corr };
-    if (ev.kind === "perception") this.#lastPerception = ev.data;
+    // L2: wrap the event's untrusted leaves as delimited data BEFORE the model can see it.
+    // Paths come from the pinned profile (x-abp-trust:untrusted); control fields stay raw so
+    // the agent can still act on ids/seq/conversation_id.
+    const untrusted = this.#profile?.trust.events[ev.kind]?.untrusted ?? [];
+    const data = untrusted.length ? wrapUntrusted(ev.data, untrusted, { source: eventSource(ev) }) : ev.data;
+    const buffered: BufferedEvent = { kind: ev.kind, seq: ev.seq, data, id: ctx.id, corr: ctx.corr };
+    if (ev.kind === "perception") this.#lastPerception = data;
     const i = this.#waiters.findIndex((w) => w.kinds === null || w.kinds.has(ev.kind));
     if (i >= 0) {
       const [w] = this.#waiters.splice(i, 1);
@@ -152,6 +165,7 @@ export class Connector {
     this.#transport?.close();
     this.#driver = undefined;
     this.#transport = undefined;
+    this.#profile = undefined;
   }
 
   #assertLinked(): void {

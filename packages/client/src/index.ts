@@ -19,3 +19,8 @@ export type {
   TurnHandler,
   EventHandler,
 } from "./driver.ts";
+export { wrapUntrusted, wrapString, escapeUntrusted, UNTRUSTED_OPEN_TAG } from "./wrap.ts";
+export { LOCKED_PERSONA_PROMPT, buildPersonaPrompt } from "./persona.ts";
+export type { PersonaProfile } from "./persona.ts";
+export { INJECTION_EVALS, INJECTION_CATEGORIES } from "./injection-evals.ts";
+export type { InjectionEval, InjectionCategory } from "./injection-evals.ts";

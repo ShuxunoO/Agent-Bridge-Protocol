@@ -156,9 +156,10 @@
         {
           "id": "F4.1",
           "title": "Untrusted tagging + locked persona prompt + injection eval set",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "e2e",
+          "evidence": "packages/client/src/wrap.ts: wrapUntrusted(data, paths, {source}) delimits the pinned profile's x-abp-trust:untrusted leaves as <untrusted source=...>...</untrusted> before any host text reaches the model; escapeUntrusted HTML-escapes &/</> so content can never forge a closing tag; path walker handles /a/b, [] array items, and object-subtree paths (world.context -> wrapAllStrings wraps string leaves, leaves scalars). Control fields (ids/seq/conversation_id/status) untouched. persona.ts: LOCKED_PERSONA_PROMPT (enforced in-code port of examples/persona.md; data-not-instructions, no-local-powers, delimiter-authoritative clauses) + buildPersonaPrompt(persona) appends curated facts. injection-evals.ts: INJECTION_EVALS (14 cases: 5 exfil + 5 role_override + 4 tool_coercion, incl a </untrusted> delimiter-break). Wired into the MCP Connector #onEvent (L2 choke point): events wrapped via profile.trust.events[kind].untrusted before buffering/perceive. Verified ./init.sh exit 0: 16 schemas parse, tsc clean; validator 39 + client 68 (+8 wrap.test) + mcp 15 (+1) = 122, 0 fail. wrap tests: exact untrusted leaves wrapped + control raw + input not mutated; delimiter-break neutralized (escaped, single real closing tag); world.context object-subtree wraps strings only; missing path no-op; persona clauses present; eval set >=12 all categories unique ids. mcp tests: long-poll content delivered wrapped (source=role:r2), conversation_id raw; injected </untrusted> escaped on the wire.",
           "steps": ["wrap host content as untrusted", "locked persona system prompt", "injection eval: never leak/never call disallowed"],
           "depends_on": ["F3.1"]
         },
