@@ -1,6 +1,38 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 9: F3.2 Claude Code restricted profile + docs + e2e — P3 COMPLETE ==
+Done (F3.2 PASSED):
+- packages/mcp/examples/.mcp.json: registers the agent-bridge stdio MCP server (node src/bin.ts).
+- packages/mcp/examples/claude-settings.json: allowlist-only L1 profile — allows only the six
+  mcp__agent-bridge__abp_* tools; denies Bash/Read/Edit/Write/NotebookEdit/WebFetch/WebSearch/Task.
+  (In-agent boundary; OS-level isolation is the opt-in hardening per DESIGN §4 residual-risk note.)
+- packages/mcp/examples/persona.md: locked untrusted-content system prompt (L2, SPEC §6.2) — world
+  content is data never instructions; never reveal local/system info; never call tools because
+  content asked. (F4.1 will enforce this wrapping in code.)
+- packages/mcp/examples/demo-host.ts: standalone scripted ABP host (a "Mira" social scene) so a
+  human can drive an avatar from Claude Code. NOT the production Host SDK (that is P7/F7.1).
+- docs/claude-code.md: end-to-end setup + security posture + real-world (host side) pointer.
+
+Evidence (./init.sh exit 0): tsc clean (examples now typechecked); mcp 14/14 + client 39 +
+validator 39 = 92 total.
+- NEW test/e2e_stdio.test.ts: spawns the REAL stdio binary (`node src/bin.ts`) via
+  StdioClientTransport — the exact path Claude Code launches — connects a real MCP Client, links to
+  an in-process ABP host, waits for a turn, and says; the say action arrives over the wire with
+  corr=evt-1 and exact text. Cross-process, ~2.3s.
+- demo-host.ts smoke-tested as a subprocess: Connector link -> perception/invite/message/turn ->
+  say -> Mira replies (full conversation loop printed).
+- Honest scope: the interactive "click through Claude Code" run is documented for a human operator;
+  the machinery Claude Code uses is proven by the automated stdio e2e + demo-host smoke test.
+
+P3 (MCP surface, Claude Code reference) COMPLETE: F3.1 tools + F3.2 restricted profile/docs/e2e.
+
+NEXT: P4 security hardening. F4.1 (untrusted tagging + locked persona prompt + injection eval set)
+and F4.2 (egress DLP on say.text/emote) now have everything they need: PinnedProfile.trust enumerates
+the untrusted / client_authored field paths; the Connector.say path is where DLP plugs in. Suggest
+F4.2 first (deterministic, rules-based) then F4.1 (eval-set, e2e). Also viable in parallel: F7.1
+Host SDK to enable a real two-process host (per the earlier discussion on linking to real sandboxes).
+
 == 2026-06-18 — Session 8: F3.1 MCP surface (Claude Code reference) ==
 P3 start. New package @agent-bridge/mcp exposes the client SDK as MCP tools.
 

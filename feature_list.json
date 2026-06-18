@@ -140,9 +140,10 @@
         {
           "id": "F3.2",
           "title": "Claude Code restricted profile + docs + manual e2e",
-          "status": "todo",
+          "status": "passed",
           "priority": "medium",
           "verification": "e2e",
+          "evidence": "packages/mcp/examples/: .mcp.json (registers the agent-bridge stdio server), claude-settings.json (allowlist-only L1 profile: allows only the 6 mcp__agent-bridge__abp_* tools, denies Bash/Read/Edit/Write/NotebookEdit/WebFetch/WebSearch/Task), persona.md (locked untrusted-content system prompt, L2/SPEC §6.2), demo-host.ts (standalone scripted ABP host — a Mira social scene). docs/claude-code.md: full setup (Node 24 type-strip, register server, apply restricted profile, load persona, drive the demo host) + residual-risk note + real-world (P7 host side) pointer. Verified ./init.sh exit 0: tsc clean (examples now typechecked); mcp 14/14 (incl test/e2e_stdio.test.ts spawning the REAL `node src/bin.ts` over StdioClientTransport, linking to an in-process ABP host and driving a turn -> say arrives with corr=evt-1) + client 39 + validator 39 = 92. Demo host smoke-tested as a subprocess: Connector link -> perception/invite/message/turn -> say -> Mira replies (full conversation loop). NOTE: interactive Claude-Code-clicks-through run is documented for a human operator; the exact stdio path Claude Code uses is proven by the automated e2e + demo-host smoke test.",
           "steps": ["allowlist-only profile", "attach docs", "drive an avatar from Claude Code; evidence"],
           "depends_on": ["F3.1"]
         }

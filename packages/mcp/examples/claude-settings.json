@@ -1,0 +1,23 @@
+{
+  "$comment": "Restricted Claude Code profile for driving an ABP avatar (DESIGN §4 L1). Only the agent-bridge MCP tools are allowed; filesystem / shell / web / other MCP are denied so the avatar sub-context has no ambient authority. This is an in-agent boundary; for OS-level isolation run Claude Code in a sandboxed process (isolation_mode: process).",
+  "permissions": {
+    "allow": [
+      "mcp__agent-bridge__abp_link",
+      "mcp__agent-bridge__abp_perceive",
+      "mcp__agent-bridge__abp_wait_for_event",
+      "mcp__agent-bridge__abp_say",
+      "mcp__agent-bridge__abp_act",
+      "mcp__agent-bridge__abp_persona_memory"
+    ],
+    "deny": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch",
+      "Task"
+    ]
+  }
+}

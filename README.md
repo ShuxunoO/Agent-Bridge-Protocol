@@ -23,7 +23,11 @@ project can reuse the client/connector.
 | `progress.txt` | Session progress log. |
 | `CLAUDE.md` | Startup protocol for agent-assisted development. |
 | `init.sh` | Idempotent dev-environment bootstrap. |
-| `packages/` | (upcoming) reference implementation: validator, client SDK, MCP server, host SDK. |
+| `packages/validator/` | Reference: ABP/1 validator (Core envelope/type + pinned World Profile composition). |
+| `packages/client/` | Reference: client connector — outbound wss transport, pairing/auth, event loop. |
+| `packages/mcp/` | Reference: MCP server exposing the connector to Claude Code et al. (`abp_*` tools). |
+| `docs/claude-code.md` | How to drive an avatar from Claude Code (restricted profile + demo host). |
+| `packages/` | (upcoming) host SDK + AI-Town adapter (P7). |
 
 ## Why it's safe by construction
 
