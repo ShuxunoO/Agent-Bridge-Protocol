@@ -238,9 +238,10 @@
         {
           "id": "F6.2",
           "title": "Autopilot loop driving sandboxed headless local agent",
-          "status": "todo",
+          "status": "passed",
           "priority": "medium",
           "verification": "e2e",
+          "evidence": "packages/mcp/src/autopilot.ts: Autopilot(connector,{brain,guard,maxTurns}) runs an autonomous loop — waitForEvent(turn) -> brain(event) -> route each ToolCall. The brain is injected (production: a sandboxed headless Claude Code launched via isolation_mode:process + the restricted allowlist; tests: a deterministic fn). Runtime defenses at the route choke point: L1 CapabilityGuard.assertAllowed(tool) refuses any out-of-allowlist tool (Bash/Read/foreign-MCP) — this is the runtime enforcement F4.3 deferred; L3 egress DLP runs inside connector.say (Driver #sendAction) so a secret in a say is blocked; L2 wrapping already applied upstream (events the brain sees are wrapped untrusted). Records a transcript {turnSeq,tool,ok,detail}. Verified ./init.sh exit 0: validator 39 + client 95 + mcp 19 (+3 autopilot.test) = 153, 0 fail (autopilot stable across 3 repeat runs). Tests vs a turn-driving mock host: drives N=5 turns autonomously, each answered with a say (5 ok transcript + 5 host say actions, text increments); brain asking for Bash -> refused at runtime (never reaches host), follow-up noop ok; brain say leaking a ghp_ token -> DLP blocked (never reaches host).",
           "steps": ["drive sandboxed headless Claude Code via MCP+allowlist", "e2e: autonomous N turns, DLP active"],
           "depends_on": ["F6.1", "F4.2", "F4.3"]
         },

@@ -73,7 +73,7 @@ AGENT-BRIDGE — PROGRESS LOG
           backoff, sends resume with the correct last_event_seq, and resumes driving.
   EXPECT: reconnect succeeds; resume cursor == last processed seq; world state recovered. Green.
 
-[todo] F6.2 — Autopilot loop driving a sandboxed headless local agent  (verify: e2e)
+[done] F6.2 — Autopilot loop driving a sandboxed headless local agent  (verify: e2e)
   GOAL:   An autonomous loop that drives a sandboxed headless Claude Code (via the MCP tools +
           allowlist) for N turns without a human, with DLP and capability isolation active.
   TEST:   e2e — run autopilot for N>=5 turns against the demo host; assert each turn is answered
