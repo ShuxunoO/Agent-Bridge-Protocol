@@ -202,9 +202,10 @@
         {
           "id": "F5.1",
           "title": "Persona profile format + loader",
-          "status": "todo",
+          "status": "passed",
           "priority": "medium",
           "verification": "rules-based",
+          "evidence": "packages/client/src/persona-profile.ts: loadPersonaProfile(doc) validates a closed curated shape (displayName required; backstory/traits/goals/speakingStyle optional; PERSONA_LIMITS lengths+counts; unknown fields/wrong types/oversize rejected) AND runs an EgressFilter scan so any secret/key/abs-path in the profile is refused (persona must be public/curated). loadPersonaProfileFile(path) for JSON files. buildPersonaPrompt already composes it after the locked prompt. Verified: client 88/88 (+7 persona-profile.test), 0 fail. Tests: valid profile loads; missing displayName rejected; unknown field rejected; oversize backstory + non-array traits + too-many traits rejected; sk- key and /Users/.../id_rsa in backstory rejected; buildPersonaPrompt prepends locked prompt; null/string/array inputs rejected.",
           "steps": ["user-authored profile schema", "loader + validation", "unit: invalid profile rejected"],
           "depends_on": ["F3.1"]
         },

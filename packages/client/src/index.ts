@@ -22,6 +22,8 @@ export type {
 export { wrapUntrusted, wrapString, escapeUntrusted, UNTRUSTED_OPEN_TAG } from "./wrap.ts";
 export { LOCKED_PERSONA_PROMPT, buildPersonaPrompt } from "./persona.ts";
 export type { PersonaProfile } from "./persona.ts";
+export { loadPersonaProfile, loadPersonaProfileFile, PERSONA_LIMITS } from "./persona-profile.ts";
+export type { PersonaLoadResult } from "./persona-profile.ts";
 export { INJECTION_EVALS, INJECTION_CATEGORIES } from "./injection-evals.ts";
 export type { InjectionEval, InjectionCategory } from "./injection-evals.ts";
 export {
