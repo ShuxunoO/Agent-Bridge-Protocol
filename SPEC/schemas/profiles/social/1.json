@@ -92,7 +92,7 @@
       }
     },
     "invite": {
-      "description": "An interaction invite from another role.",
+      "description": "An interaction invite from another role. Informational: abp.social/1 has no accept/decline action — the host auto-accepts/auto-joins external avatars (human-like). The avatar's control is interact_start/say/interact_leave (see SPEC/abp-v1.md §5.6.2).",
       "data": {
         "type": "object",
         "additionalProperties": false,

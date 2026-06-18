@@ -388,6 +388,22 @@ learns the resulting `conversation_id` from the next `invite`/`turn`/`message` e
 that interaction, and only then may it `say` into that conversation. A client MUST NOT invent a
 `conversation_id`.
 
+#### 5.6.2 Invite handling (no explicit accept/decline)
+
+`abp.social/1` intentionally has **no** `accept`/`decline` action. The external avatar is treated
+as a **human-like** role: the host auto-accepts/auto-joins invites (as AI-Town already does for
+humans). `invite` is therefore informational — it signals an interaction the avatar has joined (or
+is about to). The avatar's meaningful control is `interact_start` (who to approach), `say` (what to
+communicate), and `interact_leave` (when to leave).
+
+Host requirement: after auto-joining the avatar, the host MUST give it an action opportunity for
+that conversation (a `turn`, or the `proactive` capability) so the avatar can always `interact_leave`
+— otherwise the avatar could be trapped in a conversation it cannot exit. This keeps the avatar's
+leave guarantee intact despite auto-accept.
+
+Should a host ever require explicit consent, that is a non-breaking **profile evolution**
+(`abp.social/2` or a new action kind) under §9 — never a Core change.
+
 ## 6. Security model (normative)
 
 The full threat model and the 5-layer defense live in `../DESIGN.md`. The protocol-level

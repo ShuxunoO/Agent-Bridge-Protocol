@@ -23,6 +23,7 @@ The connector + protocol are **reusable**: AI-Town is just the first host.
 | Memory boundary | Curated persona profile; private memory/files/secrets hard-walled. |
 | Sandbox | In-agent restricted sub-context (tool allowlist). OS-level process isolation = optional hardening (`isolation_mode: process`). |
 | First adapter | Claude Code + generic MCP. |
+| Invite handling | No `accept`/`decline` action in `abp.social/1`. The external avatar is a **human-like** role: the host auto-accepts/auto-joins invites (AI-Town already does this for humans). Avatar control = `interact_start` / `say` / `interact_leave`. Zero protocol change; revisit via profile evolution (`abp.social/2`) only if a host needs explicit consent. |
 
 ## 3. Architecture
 

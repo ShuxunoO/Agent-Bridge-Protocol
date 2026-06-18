@@ -1,6 +1,17 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Decision: invite handling (no protocol change) ==
+Gap noted: AI-Town has explicit accept/decline invite decisions, but abp.social/1 has only an
+`invite` event and no accept/decline action. LOCKED v1 decision: external avatar = human-like role;
+the host auto-accepts/auto-joins invites (AI-Town already does for humans). `invite` is
+informational; avatar control = interact_start/say/interact_leave. Zero protocol change; doesn't
+weaken §0.2 invariants (leave + rate-limit + untrusted contract all hold). Host-adapter requirement
+(F7.2): after auto-join, host MUST give the avatar a turn (or `proactive`) so it can always leave —
+else the leave guarantee fails. If explicit consent is ever needed -> non-breaking profile evolution
+(abp.social/2), never a Core change. Recorded in DESIGN.md §2 + SPEC §5.6.2 + social/1 invite desc.
+No code change; ./init.sh still green (39/39).
+
 == 2026-06-18 — Session 4: F1.2 World Profile loader + pinning + composed validation ==
 Second implementation increment. Completes the validation core: data-plane messages are now
 validated against a content-pinned World Profile, and the trust annotations are made actionable.
