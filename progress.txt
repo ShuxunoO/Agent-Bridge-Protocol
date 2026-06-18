@@ -1,6 +1,38 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 5: F2.1 outbound wss transport + envelope (de)serialize ==
+Start of P2 (client SDK / connector). New package @agent-bridge/client.
+
+Done (F2.1 PASSED):
+- packages/client/src/transport.ts: WssTransport — outbound WebSocket (ws lib), EventEmitter.
+  Client always initiates (invariant 1). One ABP message per UTF-8 JSON frame. connect() resolves
+  on open; send(msg) validates -> serializes -> sends; inbound #onFrame validates EVERY frame
+  before delivery (the connector is the security kernel): size<=65536 -> JSON.parse -> validateMessage,
+  then emits "message"(msg,type) or "invalid"({reason,errors,raw}). TLS posture enforced at
+  construction (§2): wss:// always allowed; ws:// only for loopback host (localhost/127.0.0.1/::1);
+  any other scheme rejected. Validate fn is injectable (default CoreValidator; swap AbpValidator in
+  after pairing/F1.2) so the transport stays decoupled from profile state.
+- Cross-package wiring confirmed: @agent-bridge/client imports @agent-bridge/validator via the
+  workspace symlink; Node 24 type-stripping resolves the dependency's .ts exports at runtime; tsc
+  resolves its types. esModuleInterop on; ws + @types/ws added.
+
+Evidence (./init.sh exit 0, fully green):
+- 16 schemas parse; tsc clean (both packages).
+- @agent-bridge/client: 10/10 e2e tests on a loopback ws server (127.0.0.1). Covered: valid hello
+  round-trips and is delivered parsed; unknown-type / oversize(>65536) / non-JSON / binary inbound
+  frames -> "invalid" (never "message"); send() refuses invalid outbound + pre-open send throws;
+  ws://non-loopback and http:// refused at construction; wss://remote accepted.
+- @agent-bridge/validator: 39/39 (unchanged). Total 49 tests.
+
+Gotchas fixed: import type for type-only node:net AddressInfo (else type-stripping leaves a runtime
+import that crashes); register inbound-event listeners BEFORE connect() (server pushes on connect ->
+race) + per-test timeouts; node --test --test-force-exit (loopback servers keep the loop alive).
+
+NEXT: F2.2 — pairing/auth: keypair gen/load, sign pair_challenge nonce, send pair_request, store +
+use the scoped session token (envelope.session + optional Authorization: Bearer), resume; unit:
+scope/expiry/forgery rejected. Then F2.3 event loop (dispatch events, submit actions, turn deadlines).
+
 == 2026-06-18 — Decision: invite handling (no protocol change) ==
 Gap noted: AI-Town has explicit accept/decline invite decisions, but abp.social/1 has only an
 `invite` event and no accept/decline action. LOCKED v1 decision: external avatar = human-like role;

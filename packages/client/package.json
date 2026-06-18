@@ -1,0 +1,22 @@
+{
+  "name": "@agent-bridge/client",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "ABP/1 client connector. F2.1: outbound wss transport + envelope (de)serialize with strict inbound validation.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test --test-force-exit test/*.test.ts"
+  },
+  "dependencies": {
+    "@agent-bridge/validator": "*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.12",
+    "typescript": "^5.9.3"
+  }
+}

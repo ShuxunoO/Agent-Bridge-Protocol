@@ -94,9 +94,10 @@
         {
           "id": "F2.1",
           "title": "Transport (outbound wss baseline) + envelope (de)serialize",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "e2e",
+          "evidence": "packages/client/src/transport.ts: WssTransport (outbound WebSocket via ws; EventEmitter). One ABP message per UTF-8 JSON frame. connect() resolves on open; send() validates then serializes; inbound #onFrame validates every frame before delivery (size<=65536 -> JSON parse -> validateMessage) and emits 'message'(msg,type) or 'invalid'(reason,errors). TLS posture enforced at construction: wss:// always ok; ws:// only for loopback host; other schemes rejected (§2). Pluggable Validate fn (default CoreValidator; AbpValidator can be swapped in post-pairing). Verified via ./init.sh (exit 0): 10/10 e2e tests on a loopback ws server + tsc clean. Covered: valid hello round-trips and is delivered parsed; unknown-type / oversize / non-JSON / binary inbound frames -> 'invalid' not 'message'; send() refuses invalid + pre-open send throws; ws://non-loopback and non-ws scheme refused; wss://remote accepted. Test runner uses --test-force-exit (loopback servers leave the loop non-empty).",
           "steps": ["wss client; one message per frame", "serialize/parse with validation", "loopback round-trip test"],
           "depends_on": ["F1.1"]
         },
