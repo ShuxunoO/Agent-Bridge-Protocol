@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/event.json",
+  "title": "ABP v1 Core event envelope (Host -> Client)",
+  "description": "Core validates only the event envelope. The set of kinds and each kind's `data` schema are defined by the negotiated, pinned World Profile (SPEC/abp-v1.md §5); clients MUST additionally validate `data` against that profile's `events[kind].data` schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "seq", "data"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "A key defined by the pinned profile's `events` map. Unknown kinds MUST be rejected."
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Global, per-session, monotonically increasing event sequence. The resume cursor (§4.3.2). Independent of any per-conversation sequence a profile defines."
+    },
+    "data": {
+      "type": "object",
+      "description": "Validated against the pinned profile's events[kind].data schema (closed, additionalProperties:false)."
+    }
+  }
+}

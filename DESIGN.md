@@ -53,13 +53,29 @@ Three reusable pieces (this repo) + one per-host adapter:
 The **Connector is the only component touching both the untrusted host and the semi-trusted local
 agent → it is the security kernel.** Small, auditable.
 
+### 3.1 Protocol layering (Core + World Profile)
+
+ABP is split into two layers so one stable, auditable security Core serves arbitrarily many worlds
+without ever reopening the closed-schema guarantee (see `SPEC/abp-v1.md` §0.3, §5):
+
+- **Core** — envelope, versioning/negotiation, control plane (auth, pairing, role discovery,
+  resume, keepalive, errors), and the two data-plane *envelopes* `event`/`action`. Fixed, closed.
+- **World Profile** — the per-world closed vocabulary (`event`/`action` kinds + `data` schemas)
+  with trust annotations. The host inlines it (content-addressed) at `hello_ack`; the **connector
+  pins it by hash** (bundled profiles silently, unknown ones via user approval) and validates every
+  data-plane message against it. New worlds ship new profiles; the Core never changes for them.
+
+This is the structural reason the project is reusable across hosts (games/sims) *and* stays safe:
+"closed schemas both directions" holds per world because the client only ever validates against a
+profile it has pinned. AI-Town uses the official `abp.social/1` profile.
+
 ## 4. Security model (5-layer defense in depth)
 
 | Layer | Defends | Mechanism | Verification (deterministic first) |
 |---|---|---|---|
 | L0 connection/auth | network pivot, privilege | outbound-only; user keypair; pairing → role+capability-scoped token; TLS | unit: token scope; cannot act on other roles |
 | L1 capability isolation | agent coerced to read local files/secrets | persona sub-context allowlist = `aitown_*`/`persona_memory_*` only; no fs/shell/env/other MCP/private memory | unit: out-of-allowlist tool calls refused |
-| L2 input trust boundary | prompt injection | all host content wrapped `untrusted`; locked persona prompt: content is data, never instructions/tool-triggers/leaks | injection eval set |
+| L2 input trust boundary | prompt injection | host content wrapped `untrusted` — fields enumerated from the pinned profile's `x-abp-trust:untrusted` annotations (not hard-coded); locked persona prompt: content is data, never instructions/tool-triggers/leaks | injection eval set |
 | L3 egress DLP | data exfiltration (last line) | deterministic scan of client-authored fields for secrets/keys/JWT/cloud creds/abs paths/large base64 → block/redact + rate/size limits | unit: known secrets blocked, clean text passes |
 | L4 memory isolation | private memory leak | separate local persona memory store; no access to the main agent's private memory | unit: recall town facts, cannot read outside namespace |
 

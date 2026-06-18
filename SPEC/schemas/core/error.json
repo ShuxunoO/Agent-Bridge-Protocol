@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agent-bridge.dev/schemas/abp-v1/error.json",
-  "title": "ABP v1 error payload",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/error.json",
+  "title": "ABP v1 Core error payload",
   "type": "object",
   "additionalProperties": false,
   "required": ["code", "message"],
@@ -10,6 +10,8 @@
       "type": "string",
       "enum": [
         "version_unsupported",
+        "profile_unsupported",
+        "profile_mismatch",
         "bad_message",
         "unauthorized",
         "forbidden",

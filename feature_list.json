@@ -30,9 +30,24 @@
           "status": "passed",
           "priority": "high",
           "verification": "rules-based",
-          "evidence": "SPEC/schemas/{envelope,event,action,error}.json written; all parse as valid JSON (init.sh check).",
+          "evidence": "SPEC/schemas/{envelope,event,action,error}.json written; all parse as valid JSON (init.sh check). Superseded/relocated by F0.3 (layered: schemas/core/ + schemas/profiles/).",
           "steps": ["Author JSON Schema 2020-12 for the security-critical closed types", "additionalProperties:false everywhere"],
           "depends_on": ["F0.1"]
+        },
+        {
+          "id": "F0.3",
+          "title": "Layered architecture revision (Core + World Profile) per design review",
+          "status": "passed",
+          "priority": "high",
+          "verification": "rules-based",
+          "evidence": "Adopted plan B (layering) after foundational review. SPEC/abp-v1.md rewritten: §0.3 Core/Profile split; §5 World Profiles (profile meta-schema, x-abp-trust trust annotation, open-object bounds, content-hash pinning no fetch-by-URL); resume event-seq cursor (§4.3.2); in-band roles_query/roles_list + claim-based bind authorization + host-pubkey pinning (§4.2); relative deadlines + idempotency (§4.3.3); message size/depth limits (§2); error codes profile_unsupported/profile_mismatch. Schemas relocated to schemas/core/{envelope,event,action,error,profile}.json + schemas/profiles/social/1.json. init.sh recurses. Verification: all 6 schemas parse (init.sh); social profile passes structural check against core/profile.json meta-schema; untrusted + client_authored annotations present (python structural check). External refs §0.2/§6/§9 preserved.",
+          "steps": [
+            "Adopt B (Core + World Profile layering).",
+            "Rewrite SPEC/abp-v1.md: layered arch, profiles, trust annotation, resume cursor, role discovery+claim, relative deadlines, idempotency, size/depth bounds, host pinning.",
+            "Relocate schemas to core/ + profiles/social/1.json; add core/profile.json meta-schema; add x-abp-trust + context bounds.",
+            "init.sh recurse; verify parse + meta-structural check."
+          ],
+          "depends_on": ["F0.2"]
         }
       ]
     },
@@ -47,11 +62,26 @@
           "priority": "high",
           "verification": "rules-based",
           "steps": [
-            "Author remaining control-plane schemas (hello, hello_ack, pair_*, resume, ping, bye).",
-            "Validator lib that checks envelope + payload by type/kind.",
-            "Conformance tests: unknown type/kind/fields rejected; valid messages pass; data-plane requires session."
+            "Author remaining control-plane schemas (hello, hello_ack, roles_query, roles_list, pair_*, resume, ping, bye) per §4 field tables (hello_ack carries the inlined profile + hash; resume carries last_event_seq).",
+            "Validator lib that checks envelope + payload by type/kind (Core layer only here; profile composition is F1.2).",
+            "Conformance tests: unknown type/kind/fields rejected; valid messages pass; data-plane requires session; size/depth limits (§2) enforced."
           ],
-          "depends_on": ["F0.2"]
+          "depends_on": ["F0.3"]
+        },
+        {
+          "id": "F1.2",
+          "title": "World Profile loader + pinning + composed data-plane validation",
+          "status": "todo",
+          "priority": "high",
+          "verification": "rules-based",
+          "steps": [
+            "Load + validate a profile document against core/profile.json meta-schema.",
+            "Pin by content hash; reject mismatch (profile_mismatch); approval gate for unknown (id,version,hash).",
+            "Compose validation: event/action data validated against pinned profile events[kind].data / actions[kind].data.",
+            "Enumerate x-abp-trust:untrusted / client_authored field paths from the pinned profile (feeds F4.1/F4.2).",
+            "Unit: bundled abp.social/1 pins silently; tampered doc -> profile_mismatch; unknown kind/field rejected."
+          ],
+          "depends_on": ["F1.1"]
         }
       ]
     },

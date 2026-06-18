@@ -1,6 +1,44 @@
 AGENT-BRIDGE — PROGRESS LOG
 (newest first; one entry per working session)
 
+== 2026-06-18 — Session 2: foundational protocol review + layering revision (F0.3) ==
+User asked for a foundation-level review of SPEC/abp-v1.md before implementing, then chose the
+layered fix. Review surfaced one root tension + several structural gaps; all addressed in-spec.
+
+Root tension found: closed schemas (security) vs host diversity (the "any game/sim host" goal).
+The data-plane vocabulary was AI-Town-shaped; §9 made every new world a Core version bump — so it
+was not actually reusable. DECISION (user): plan B — split the protocol into two layers.
+
+Done (F0.3 PASSED):
+- ABP is now LAYERED: stable closed **Core** (envelope, control plane, event/action ENVELOPES) +
+  per-world **World Profile** (the event/action kinds + data schemas) that the client PINS by
+  content hash. New worlds = new profiles, never Core changes. Closed-schema guarantee holds per
+  world (client only validates against a pinned profile). §0.3 + §5.
+- Fixed: (2) "untrusted" was only prose -> now machine-marked `x-abp-trust` annotation (untrusted /
+  client_authored) enumerable by the wrapper/DLP layers. (3) world.context was unbounded -> bounded
+  (maxProperties, scalar leaves) + global message size(65536B)/depth(16) limits (§2,§5.4).
+  (4) role discovery was an out-of-band URL -> in-band roles_query/roles_list + claim-based bind
+  authorization + optional host-pubkey pinning (§4.2). (5) resume couldn't recover missed state ->
+  global per-session event `seq` cursor + backfill-or-snapshot on resume (§4.3.2). Plus: relative
+  deadlines, idempotency-by-id (§4.3.3), proactive-action capability, host-assigned conversation_id
+  (§5.6.1), new error codes profile_unsupported/profile_mismatch.
+- Schemas relocated/added: SPEC/schemas/core/{envelope,event,action,error,profile}.json +
+  SPEC/schemas/profiles/social/1.json (the official abp.social/1 vocabulary w/ x-abp-trust +
+  context bounds). Old flat schemas removed. init.sh now recurses.
+- External section refs preserved: §0.2 (invariants), §6 (security), §9 (extensibility).
+
+Evidence:
+- `./init.sh` -> all 6 schemas parse (core x5 + social profile).
+- python structural check: social/1.json conforms to core/profile.json meta-schema shape; every
+  event/action entry has a `data` object; untrusted + client_authored annotations present.
+  (Full JSON-Schema-2020-12 composition validation is F1.2's validator; jsonschema dep unavailable
+  offline this session.)
+
+NEXT: F1.1 — Core validator + remaining control-plane schemas (hello/hello_ack w/ inlined profile,
+roles_*, pair_*, resume w/ last_event_seq, ping, bye) + conformance tests (unknown type/kind/fields
+rejected; data-plane requires session; size/depth limits). Then F1.2 — profile loader + hash
+pinning + composed data-plane validation + x-abp-trust path enumeration.
+
 == 2026-06-18 — Session 1: protocol-first kickoff ==
 Created the independent project (separate from ai-town) per user requirement: the connector +
 protocol must be reusable by any host, not coupled to AI-Town.

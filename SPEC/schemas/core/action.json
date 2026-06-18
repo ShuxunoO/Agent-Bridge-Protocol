@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/action.json",
+  "title": "ABP v1 Core action envelope (Client -> Host)",
+  "description": "Core validates only the action envelope. The set of kinds and each kind's `data` schema are defined by the negotiated, pinned World Profile (SPEC/abp-v1.md §5). Hosts MUST re-validate against session capabilities and the current turn's allowed_actions. Fields the profile marks x-abp-trust:client_authored SHOULD pass egress DLP before emission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "data"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "A key defined by the pinned profile's `actions` map. Unknown kinds MUST be rejected."
+    },
+    "data": {
+      "type": "object",
+      "description": "Validated against the pinned profile's actions[kind].data schema (closed, additionalProperties:false)."
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/profile.json",
+  "title": "ABP v1 World Profile document (meta-schema)",
+  "description": "Validates the STRUCTURE of a World Profile document (SPEC/abp-v1.md §5). A profile defines, for one world type, the closed set of event/action kinds and each kind's `data` JSON Schema. The Core validator composes: envelope -> Core event/action shape -> profile events[kind].data / actions[kind].data. Trust annotations (x-abp-trust) live inside those data schemas.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["abp_profile", "version", "events", "actions"],
+  "properties": {
+    "abp_profile": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Profile id, e.g. 'abp.social'."
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Profile version, e.g. '1'. Pinned together with the id and content hash."
+    },
+    "title": { "type": "string", "maxLength": 256 },
+    "description": { "type": "string", "maxLength": 2048 },
+    "events": {
+      "$ref": "#/$defs/kindMap",
+      "description": "Map of event.kind -> { description?, data: <closed JSON Schema> }."
+    },
+    "actions": {
+      "$ref": "#/$defs/kindMap",
+      "description": "Map of action.kind -> { description?, data: <closed JSON Schema> }."
+    }
+  },
+  "$defs": {
+    "kindMap": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 128,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "description": { "type": "string", "maxLength": 1024 },
+          "data": {
+            "type": "object",
+            "description": "A JSON Schema 2020-12 for this kind's payload. MUST be closed (additionalProperties:false) except for explicitly-bounded open objects (§5.4). MAY carry x-abp-trust annotations."
+          }
+        }
+      }
+    }
+  }
+}

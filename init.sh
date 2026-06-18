@@ -25,9 +25,10 @@ else
 fi
 
 # 3. Validate that all JSON schemas parse (rules-based check for F0.2)
-echo "== validating SPEC/schemas/*.json =="
+#    Recurses: core/ (Core schemas) + profiles/<id>/<ver>.json (World Profiles).
+echo "== validating SPEC/schemas/**/*.json =="
 schema_fail=0
-for f in SPEC/schemas/*.json; do
+while IFS= read -r f; do
   [ -e "$f" ] || continue
   if node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" 2>/dev/null \
      || python3 -c "import json,sys; json.load(open('$f'))" 2>/dev/null; then
@@ -35,7 +36,7 @@ for f in SPEC/schemas/*.json; do
   else
     echo "FAIL $f"; schema_fail=1
   fi
-done
+done < <(find SPEC/schemas -name '*.json' | sort)
 [ "$schema_fail" = "0" ] && echo "all schemas parse" || { echo "schema parse failure"; exit 1; }
 
 # 4. Run tests if a runner is configured

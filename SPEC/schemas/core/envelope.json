@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agent-bridge.dev/schemas/abp-v1/envelope.json",
-  "title": "ABP v1 message envelope",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/core/envelope.json",
+  "title": "ABP v1 Core message envelope",
+  "description": "The fixed, closed Core envelope. The data-plane payloads (event/action) are validated additionally against the negotiated, pinned World Profile (see SPEC/abp-v1.md §5).",
   "type": "object",
   "additionalProperties": false,
   "required": ["abp", "type", "id", "ts", "payload"],
@@ -11,6 +12,7 @@
       "type": "string",
       "enum": [
         "hello", "hello_ack",
+        "roles_query", "roles_list",
         "pair_challenge", "pair_request", "pair_result",
         "resume", "ping", "pong", "bye", "error",
         "event", "action"
