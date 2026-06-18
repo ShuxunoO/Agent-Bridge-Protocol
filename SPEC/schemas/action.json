@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/action.json",
+  "title": "ABP v1 action payload (Client -> Host)",
+  "description": "Closed enum of action verbs. Hosts MUST re-validate against session capabilities and the current turn's allowed_actions. Client-authored text fields SHOULD pass egress DLP before emission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "data"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": ["say", "move", "interact_start", "interact_leave", "emote", "noop"]
+    },
+    "data": { "type": "object" }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "kind": { "const": "say" },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["conversation_id", "text"],
+          "properties": {
+            "conversation_id": { "type": "string", "maxLength": 128 },
+            "text": { "type": "string", "minLength": 1, "maxLength": 8192 },
+            "redacted": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": { "const": "move" },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": ["to"],
+              "properties": {
+                "to": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["x", "y"],
+                  "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+                }
+              }
+            },
+            {
+              "required": ["to"],
+              "properties": {
+                "to": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["target_role"],
+                  "properties": { "target_role": { "type": "string", "maxLength": 128 } }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": { "const": "interact_start" },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target_role"],
+          "properties": { "target_role": { "type": "string", "maxLength": 128 } }
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": { "const": "interact_leave" },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["conversation_id"],
+          "properties": { "conversation_id": { "type": "string", "maxLength": 128 } }
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": { "const": "emote" },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["emote"],
+          "properties": {
+            "emote": { "type": "string", "maxLength": 64 },
+            "redacted": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": { "const": "noop" },
+        "data": { "type": "object", "additionalProperties": false }
+      }
+    }
+  ]
+}

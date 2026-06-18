@@ -1,0 +1,19 @@
+# deps
+node_modules/
+# build
+dist/
+build/
+*.tsbuildinfo
+# env / secrets
+.env
+.env.*
+*.key
+*.pem
+keys/
+# os / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
+# test
+coverage/

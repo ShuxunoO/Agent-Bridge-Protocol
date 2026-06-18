@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/envelope.json",
+  "title": "ABP v1 message envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["abp", "type", "id", "ts", "payload"],
+  "properties": {
+    "abp": { "const": "1" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "hello", "hello_ack",
+        "pair_challenge", "pair_request", "pair_result",
+        "resume", "ping", "pong", "bye", "error",
+        "event", "action"
+      ]
+    },
+    "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "ts": { "type": "integer", "minimum": 0 },
+    "session": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "corr": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "payload": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "comment": "Data-plane messages MUST carry a session.",
+      "if": { "properties": { "type": { "enum": ["event", "action"] } } },
+      "then": { "required": ["session"] }
+    }
+  ]
+}

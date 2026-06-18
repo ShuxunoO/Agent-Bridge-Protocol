@@ -1,0 +1,269 @@
+{
+  "project": "agent-bridge",
+  "description": "Agent Bridge Protocol (ABP) + reusable connector/SDK. Protocol-first. See DESIGN.md and SPEC/abp-v1.md.",
+  "verification_priority": ["rules-based", "visual", "e2e", "llm-judge"],
+  "rules": [
+    "One feature per session. Commit, update progress.txt, exit.",
+    "Never set status:passed without test output recorded in the session.",
+    "Never edit/remove existing feature entries; only append or flip status.",
+    "On a broken state, git reset to last green commit; do not patch on decay.",
+    "Reference implementation language: TypeScript (Node), schema validation via a JSON Schema validator."
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "title": "Protocol (protocol-first)",
+      "features": [
+        {
+          "id": "F0.1",
+          "title": "ABP v1 normative spec",
+          "status": "passed",
+          "priority": "high",
+          "verification": "review",
+          "evidence": "SPEC/abp-v1.md written; covers envelope, control+data planes, closed schemas, security model, conformance.",
+          "steps": ["Write SPEC/abp-v1.md", "Cover lifecycle, security invariants, errors, conformance, extensibility"],
+          "depends_on": []
+        },
+        {
+          "id": "F0.2",
+          "title": "Machine-readable closed schemas (envelope/event/action/error)",
+          "status": "passed",
+          "priority": "high",
+          "verification": "rules-based",
+          "evidence": "SPEC/schemas/{envelope,event,action,error}.json written; all parse as valid JSON (init.sh check).",
+          "steps": ["Author JSON Schema 2020-12 for the security-critical closed types", "additionalProperties:false everywhere"],
+          "depends_on": ["F0.1"]
+        }
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Validation core",
+      "features": [
+        {
+          "id": "F1.1",
+          "title": "Schema validator + remaining control-plane schemas + conformance tests",
+          "status": "todo",
+          "priority": "high",
+          "verification": "rules-based",
+          "steps": [
+            "Author remaining control-plane schemas (hello, hello_ack, pair_*, resume, ping, bye).",
+            "Validator lib that checks envelope + payload by type/kind.",
+            "Conformance tests: unknown type/kind/fields rejected; valid messages pass; data-plane requires session."
+          ],
+          "depends_on": ["F0.2"]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Client SDK (connector core)",
+      "features": [
+        {
+          "id": "F2.1",
+          "title": "Transport (outbound wss baseline) + envelope (de)serialize",
+          "status": "todo",
+          "priority": "high",
+          "verification": "e2e",
+          "steps": ["wss client; one message per frame", "serialize/parse with validation", "loopback round-trip test"],
+          "depends_on": ["F1.1"]
+        },
+        {
+          "id": "F2.2",
+          "title": "Pairing/auth (keypair, challenge-sign, scoped token, resume)",
+          "status": "todo",
+          "priority": "high",
+          "verification": "rules-based",
+          "steps": ["keypair gen/load", "sign challenge; send pair_request", "store+use scoped token; resume", "unit: scope/expiry/forgery rejected"],
+          "depends_on": ["F2.1"]
+        },
+        {
+          "id": "F2.3",
+          "title": "Event loop (dispatch events, submit actions, turn deadlines)",
+          "status": "todo",
+          "priority": "high",
+          "verification": "e2e",
+          "steps": ["subscribe events; dispatch by kind", "submit actions correlated to turns", "respect deadlines/noop"],
+          "depends_on": ["F2.2"]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "MCP surface (Claude Code reference)",
+      "features": [
+        {
+          "id": "F3.1",
+          "title": "MCP server tools (link/perceive/wait_for_event/say/act/persona_memory)",
+          "status": "todo",
+          "priority": "high",
+          "verification": "e2e",
+          "steps": ["MCP server over the client SDK", "tool I/O unit tests", "wait_for_event long-poll returns on events"],
+          "depends_on": ["F2.3"]
+        },
+        {
+          "id": "F3.2",
+          "title": "Claude Code restricted profile + docs + manual e2e",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "e2e",
+          "steps": ["allowlist-only profile", "attach docs", "drive an avatar from Claude Code; evidence"],
+          "depends_on": ["F3.1"]
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Security hardening",
+      "features": [
+        {
+          "id": "F4.1",
+          "title": "Untrusted tagging + locked persona prompt + injection eval set",
+          "status": "todo",
+          "priority": "high",
+          "verification": "e2e",
+          "steps": ["wrap host content as untrusted", "locked persona system prompt", "injection eval: never leak/never call disallowed"],
+          "depends_on": ["F3.1"]
+        },
+        {
+          "id": "F4.2",
+          "title": "Egress DLP filter (deterministic)",
+          "status": "todo",
+          "priority": "high",
+          "verification": "rules-based",
+          "steps": ["scan say.text/emote for secrets/keys/JWT/cloud creds/abs paths/large base64", "block or redact + rate/size limits", "unit: secrets blocked, clean passes"],
+          "depends_on": ["F2.3"]
+        },
+        {
+          "id": "F4.3",
+          "title": "Capability isolation enforcement (+ optional isolation_mode: process)",
+          "status": "todo",
+          "priority": "high",
+          "verification": "rules-based",
+          "steps": ["avatar context exposes only allowlisted tools", "optional OS-level process isolation", "unit: fs/shell/other-MCP refused"],
+          "depends_on": ["F4.1"]
+        },
+        {
+          "id": "F4.4",
+          "title": "Prompt-injection regression eval harness",
+          "status": "todo",
+          "priority": "high",
+          "verification": "rules-based",
+          "steps": ["adversarial test set (exfil/role-override/tool-coercion)", "programmatic eval + pass rate", "CI gate threshold"],
+          "depends_on": ["F4.1", "F4.2", "F4.3"]
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Persona memory (local, curated)",
+      "features": [
+        {
+          "id": "F5.1",
+          "title": "Persona profile format + loader",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "rules-based",
+          "steps": ["user-authored profile schema", "loader + validation", "unit: invalid profile rejected"],
+          "depends_on": ["F3.1"]
+        },
+        {
+          "id": "F5.2",
+          "title": "Local social memory store (namespaced, hard-walled)",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "rules-based",
+          "steps": ["separate local store", "persona_memory_* confined to namespace", "unit: recall town facts; cannot read outside"],
+          "depends_on": ["F5.1"]
+        }
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Autopilot + config",
+      "features": [
+        {
+          "id": "F6.1",
+          "title": "Connection daemon (persistent link + reconnect)",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "e2e",
+          "steps": ["persistent outbound link w/ backoff", "reconnect test"],
+          "depends_on": ["F2.3"]
+        },
+        {
+          "id": "F6.2",
+          "title": "Autopilot loop driving sandboxed headless local agent",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "e2e",
+          "steps": ["drive sandboxed headless Claude Code via MCP+allowlist", "e2e: autonomous N turns, DLP active"],
+          "depends_on": ["F6.1", "F4.2", "F4.3"]
+        },
+        {
+          "id": "F6.3",
+          "title": "Config + hot-unplug kill switch",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "rules-based",
+          "steps": ["toggle in-the-loop vs autopilot", "hot unplug stops cleanly", "unit: toggling + kill switch"],
+          "depends_on": ["F6.2"]
+        }
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Host SDK + AI-Town adapter reference",
+      "features": [
+        {
+          "id": "F7.1",
+          "title": "Generic host SDK (expose roles over ABP)",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "e2e",
+          "steps": ["server-side helper: emit events, validate+apply actions, scoped tokens", "host-side conformance tests"],
+          "depends_on": ["F1.1"]
+        },
+        {
+          "id": "F7.2",
+          "title": "AI-Town host adapter (in ai-town repo): controller=external + action queue + wire host SDK",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "e2e",
+          "steps": ["ai-town: agent.controller field", "external agents enqueue instead of calling LLM", "wire ABP host SDK; e2e drive an AI-Town role"],
+          "depends_on": ["F7.1", "F2.3"]
+        }
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Other agent adapters",
+      "features": [
+        {
+          "id": "F8.1",
+          "title": "Codex adapter (+ OpenClaw/Hermes once MCP confirmed)",
+          "status": "todo",
+          "priority": "low",
+          "verification": "e2e",
+          "steps": ["confirm MCP support per agent", "thin adapter + smoke test"],
+          "depends_on": ["F3.2"]
+        }
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Scale / throughput (future)",
+      "features": [
+        {
+          "id": "F9.1",
+          "title": "Sharded streams, backpressure, horizontal scale, load test",
+          "status": "todo",
+          "priority": "future",
+          "verification": "e2e",
+          "steps": ["per-role queues + backpressure", "horizontal host scale", "load test to target concurrent avatars"],
+          "depends_on": ["F7.1"]
+        }
+      ]
+    }
+  ]
+}

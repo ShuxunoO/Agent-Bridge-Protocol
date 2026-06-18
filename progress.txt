@@ -1,0 +1,20 @@
+AGENT-BRIDGE — PROGRESS LOG
+(newest first; one entry per working session)
+
+== 2026-06-18 — Session 1: protocol-first kickoff ==
+Created the independent project (separate from ai-town) per user requirement: the connector +
+protocol must be reusable by any host, not coupled to AI-Town.
+
+Done:
+- Project scaffold: README, CLAUDE.md (startup protocol), init.sh, DESIGN.md, feature_list.json.
+- F0.1 PASSED: ABP v1 normative spec (SPEC/abp-v1.md) — envelope, control+data planes, closed
+  event/action enums, 6 security invariants, 5-layer model ref, errors, conformance, extensibility.
+- F0.2 PASSED: machine-readable closed schemas SPEC/schemas/{envelope,event,action,error}.json
+  (JSON Schema 2020-12, additionalProperties:false). Verified parse via init.sh.
+
+Decisions locked (see DESIGN.md §2): protocol-first; standalone repo; autonomy configurable;
+curated persona memory; in-agent sandbox (OS-level optional); Claude Code + generic MCP first.
+
+NEXT: F1.1 — schema validator + remaining control-plane schemas (hello, pair_*, resume, ping,
+bye) + conformance tests (unknown type/kind/fields rejected; data-plane requires session).
+This is the first implementation increment and is fully unit-testable (rules-based).

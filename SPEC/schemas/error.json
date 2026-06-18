@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-bridge.dev/schemas/abp-v1/error.json",
+  "title": "ABP v1 error payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "message"],
+  "properties": {
+    "code": {
+      "type": "string",
+      "enum": [
+        "version_unsupported",
+        "bad_message",
+        "unauthorized",
+        "forbidden",
+        "rate_limited",
+        "not_found",
+        "conflict",
+        "internal"
+      ]
+    },
+    "message": { "type": "string", "maxLength": 1024 },
+    "retryable": { "type": "boolean" }
+  }
+}
