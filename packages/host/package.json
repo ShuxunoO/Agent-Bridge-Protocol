@@ -2,7 +2,7 @@
   "name": "@agent-bridge/host",
   "version": "0.0.0",
   "type": "module",
-  "description": "ABP/1 generic Host SDK (F7.1): accept outbound clients, run pairing, emit events, validate+apply actions, backfill on resume. Embedded by any host app (e.g. the AI-Town gateway).",
+  "description": "ABP/1 generic Host SDK (F7.1): accept outbound clients, run pairing, emit events, validate+apply actions, backfill on resume. Embedded by any host app's gateway.",
   "exports": {
     ".": "./src/index.ts"
   },

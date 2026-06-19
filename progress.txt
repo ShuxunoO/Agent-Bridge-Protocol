@@ -87,7 +87,7 @@ AGENT-BRIDGE — PROGRESS LOG
           and releases resources (no open handles / timers).
   EXPECT: toggles take effect; kill switch stops cleanly with bye sent. Green.
 
---- PHASE P7: host SDK + AI-Town adapter (FIRST REAL EXTERNAL LINK) ---
+--- PHASE P7: host SDK + a host app adapter (FIRST REAL EXTERNAL LINK) ---
 
 [done] F7.1 — Generic Host SDK (expose roles over ABP)  (verify: e2e)  <<< KEY MILESTONE
   GOAL:   Server-side helper any app embeds: accept outbound clients, run the host half of pairing
@@ -98,14 +98,14 @@ AGENT-BRIDGE — PROGRESS LOG
           over wss from another; full handshake + drive a turn + resume. Host-side conformance:
           rejects unknown/forged-signature/out-of-scope/oversize, never blocks on an absent client.
   EXPECT: TWO-PROCESS real client<->real host e2e passes (no mock); host conformance suite green.
-          >>> After this, "link to a real sandbox" is real, decoupled from AI-Town.
+          >>> After this, "link to a real sandbox" is real, decoupled from a host app.
 
-[todo] F7.2 — AI-Town host adapter (lives in the ai-town repo)  (verify: e2e)
-  GOAL:   Add agent.controller="external" to AI-Town; external roles ENQUEUE actions instead of
+[todo] F7.2 — a host app host adapter (lives in the the host app's repo)  (verify: e2e)
+  GOAL:   Add agent.controller="external" to a host app; external roles ENQUEUE actions instead of
           calling the LLM; wire the F7.1 Host SDK; auto-accept invites (locked decision §5.6.2).
-  TEST:   e2e — run AI-Town with the adapter; drive a role from our client/Claude Code; assert the
-          avatar moves and speaks inside AI-Town and conversations work (auto-join + interact_leave).
-  EXPECT: a Claude-Code-driven avatar visibly acts as a character in AI-Town. Green.
+  TEST:   e2e — run a host app with the adapter; drive a role from our client/Claude Code; assert the
+          avatar moves and speaks inside a host app and conversations work (auto-join + interact_leave).
+  EXPECT: a Claude-Code-driven avatar visibly acts as a character in a host app. Green.
 
 --- PHASE P8: other agent adapters ---
 
@@ -130,8 +130,8 @@ AGENT-BRIDGE — PROGRESS LOG
 ################################################################################
 
 == 2026-06-19 — Session 16: F7.1 generic Host SDK (@agent-bridge/host) ==
-User decisions for P7: (1) AI-Town host = a Node GATEWAY SIDECAR running the Host SDK, bridging to
-Convex via the Convex client (Convex stays engine/DB); (2) do F7.1 now (generic, no AI-Town risk),
+User decisions for P7: (1) a host app host = a Node GATEWAY SIDECAR running the Host SDK, bridging to
+Convex via the Convex client (Convex stays engine/DB); (2) do F7.1 now (generic, no a host app risk),
 discuss F7.2 before building.
 
 Done (F7.1 PASSED):
@@ -152,9 +152,9 @@ forbidden (client-side check bypassed via a crafted frame to prove HOST enforcem
 message type -> bad_message.
 
 *** P7 half done: generic, decoupled Host SDK works two-process. 20/23 features. ***
-NEXT: F7.2 — AI-Town adapter, as a Node gateway sidecar. PAUSED for design discussion with the
-user before touching the ai-town repo. Plan basis: HOST-ADAPTER.md (mapping) + this Host SDK; the
-gateway subscribes to AI-Town actionRequests (new Convex tables/fns), emits ABP events, applies
+NEXT: F7.2 — a host app adapter, as a Node gateway sidecar. PAUSED for design discussion with the
+user before touching the the host app's repo. Plan basis: HOST-ADAPTER.md (mapping) + this Host SDK; the
+gateway subscribes to a host app actionRequests (new Convex tables/fns), emits ABP events, applies
 ABP actions via Convex mutations; abp.social/1 fits with no protocol changes.
 
 == 2026-06-19 — Session 15: P6 autopilot (F6.1 daemon + F6.2 autopilot + F6.3 config/kill) ==
@@ -172,8 +172,8 @@ tears down, idempotent; kill-while-running resolves the loop promptly.
 Evidence (./init.sh exit 0): validator 39 + client 95 (+2 daemon) + mcp 22 (+3 autopilot, +3
 avatar) = 156, 0 fail. (autopilot test made deterministic: timer-paced host + flush before assert.)
 *** PHASE P6 COMPLETE. P0–P6 done = 19/23 features. ***
-NEXT: P7 — Host SDK (F7.1) + AI-Town adapter (F7.2). PAUSED per user: discuss the approach before
-implementing (cross-repo, touches the real AI-Town engine). HOST-ADAPTER.md (in ai-town repo) has
+NEXT: P7 — Host SDK (F7.1) + a host app adapter (F7.2). PAUSED per user: discuss the approach before
+implementing (cross-repo, touches the real a host app engine). HOST-ADAPTER.md (in the host app's repo) has
 the mapping; abp.social/1 fits with no protocol changes.
 
 == 2026-06-19 — Session 14: P5 persona memory (F5.1 profile loader + F5.2 hard-walled store) ==
@@ -192,7 +192,7 @@ literal '..' inside a single filename segment is harmless.)
 *** PHASE P5 COMPLETE. L4 (memory isolation) of the DESIGN §4 model is now enforced. ***
 NEXT: P6 autopilot. F6.1 connection daemon (persistent link + backoff reconnect + resume cursor),
 F6.2 autopilot loop (drive a sandboxed headless agent via MCP + capability guard, DLP active),
-F6.3 config toggle + hot-unplug kill switch. Then STOP at P7 (Host SDK + AI-Town) per user.
+F6.3 config toggle + hot-unplug kill switch. Then STOP at P7 (Host SDK + a host app) per user.
 
 == 2026-06-19 — Session 13: F4.4 injection regression harness + CI gate — P4 COMPLETE ==
 Done (F4.4 PASSED):
@@ -218,7 +218,7 @@ with a deterministic CI gate; L0 (connection/auth) shipped in P2; L4 (memory iso
 
 NEXT (resume the roadmap top-to-bottom): P5 — persona memory. F5.1 persona profile format +
 loader (curated, no secrets), then F5.2 persistent namespaced hard-walled local memory store
-(replaces the F3.1 in-memory placeholder). Then P6 autopilot, then P7 (Host SDK + AI-Town adapter
+(replaces the F3.1 in-memory placeholder). Then P6 autopilot, then P7 (Host SDK + a host app adapter
 = first real external link).
 
 == 2026-06-19 — Session 12: F4.3 capability isolation enforcement + isolation_mode:process ==
@@ -486,9 +486,9 @@ use the scoped session token (envelope.session + optional Authorization: Bearer)
 scope/expiry/forgery rejected. Then F2.3 event loop (dispatch events, submit actions, turn deadlines).
 
 == 2026-06-18 — Decision: invite handling (no protocol change) ==
-Gap noted: AI-Town has explicit accept/decline invite decisions, but abp.social/1 has only an
+Gap noted: a host app has explicit accept/decline invite decisions, but abp.social/1 has only an
 `invite` event and no accept/decline action. LOCKED v1 decision: external avatar = human-like role;
-the host auto-accepts/auto-joins invites (AI-Town already does for humans). `invite` is
+the host auto-accepts/auto-joins invites (a host app already does for humans). `invite` is
 informational; avatar control = interact_start/say/interact_leave. Zero protocol change; doesn't
 weaken §0.2 invariants (leave + rate-limit + untrusted contract all hold). Host-adapter requirement
 (F7.2): after auto-join, host MUST give the avatar a turn (or `proactive`) so it can always leave —
@@ -573,7 +573,7 @@ User asked for a foundation-level review of SPEC/abp-v1.md before implementing, 
 layered fix. Review surfaced one root tension + several structural gaps; all addressed in-spec.
 
 Root tension found: closed schemas (security) vs host diversity (the "any game/sim host" goal).
-The data-plane vocabulary was AI-Town-shaped; §9 made every new world a Core version bump — so it
+The data-plane vocabulary was a host app-shaped; §9 made every new world a Core version bump — so it
 was not actually reusable. DECISION (user): plan B — split the protocol into two layers.
 
 Done (F0.3 PASSED):
@@ -607,8 +607,8 @@ rejected; data-plane requires session; size/depth limits). Then F1.2 — profile
 pinning + composed data-plane validation + x-abp-trust path enumeration.
 
 == 2026-06-18 — Session 1: protocol-first kickoff ==
-Created the independent project (separate from ai-town) per user requirement: the connector +
-protocol must be reusable by any host, not coupled to AI-Town.
+Created the independent project (separate from the host app) per user requirement: the connector +
+protocol must be reusable by any host, not coupled to a host app.
 
 Done:
 - Project scaffold: README, CLAUDE.md (startup protocol), init.sh, DESIGN.md, feature_list.json.

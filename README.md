@@ -7,9 +7,10 @@ A local AI assistant (Claude Code, Codex, OpenClaw, Hermes, …) connects **outb
 perceiving, acting, and socializing — while the agent's reasoning, capabilities, and memory stay
 on the user's machine.
 
-This repo is **independent of any host application**. [AI-Town](https://github.com/a16z-infra/ai-town)
-is the first host, but anything that implements the host side of the protocol works, and any
-project can reuse the client/connector.
+This repo is **independent of any host application** and contains **only** the protocol and its
+reusable client/host SDKs. Anything that implements the host side of the protocol works; any
+project can reuse the client/connector. Host-specific business logic (mapping a particular world's
+engine onto ABP) lives in that host's own repo, never here.
 
 ## Layout
 
@@ -27,7 +28,7 @@ project can reuse the client/connector.
 | `packages/client/` | Reference: client connector — outbound wss transport, pairing/auth, event loop. |
 | `packages/mcp/` | Reference: MCP server exposing the connector to Claude Code et al. (`abp_*` tools). |
 | `docs/claude-code.md` | How to drive an avatar from Claude Code (restricted profile + demo host). |
-| `packages/` | (upcoming) host SDK + AI-Town adapter (P7). |
+| `packages/host/` | Reference: generic Host SDK any host app embeds (pairing, events, action enforcement, resume). |
 
 ## Why it's safe by construction
 

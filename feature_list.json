@@ -259,7 +259,7 @@
     },
     {
       "id": "P7",
-      "title": "Host SDK + AI-Town adapter reference",
+      "title": "Host SDK (the host adapter lives in each host app's own repo)",
       "features": [
         {
           "id": "F7.1",
@@ -273,11 +273,12 @@
         },
         {
           "id": "F7.2",
-          "title": "AI-Town host adapter (in ai-town repo): controller=external + action queue + wire host SDK",
-          "status": "todo",
+          "title": "Reference host adapter — OUT OF SCOPE for this protocol repo",
+          "status": "external",
           "priority": "medium",
           "verification": "e2e",
-          "steps": ["ai-town: agent.controller field", "external agents enqueue instead of calling LLM", "wire ABP host SDK; e2e drive an AI-Town role"],
+          "evidence": "A host app embeds @agent-bridge/host and maps its own engine's decision points to ABP events/actions in ITS OWN repo (controller=external path, action-request queue, a Node gateway sidecar). That work and its tests live in the host app's repo, not here. This entry stays to mark the boundary; the protocol repo contains no host-specific business logic.",
+          "steps": ["(in the host app repo) add an external-controller path that delegates decisions over ABP", "wire @agent-bridge/host as a gateway", "map the engine's decision points <-> ABP events/actions", "e2e in the host app repo"],
           "depends_on": ["F7.1", "F2.3"]
         }
       ]

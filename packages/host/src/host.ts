@@ -6,7 +6,7 @@
  * incoming actions (capabilities + the open turn's allowed_actions + size), and backfills (or asks
  * the embedder to snapshot) on resume. It never blocks the world on an absent client.
  *
- * The AI-Town gateway (P7/F7.2) is one embedder; the SDK itself is host-agnostic.
+ * A host app's gateway is one embedder; the SDK itself is host-agnostic.
  */
 import { randomBytes } from "node:crypto";
 import { WebSocketServer, WebSocket } from "ws";

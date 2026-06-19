@@ -17,17 +17,17 @@ connect to a **remote host** that exposes drivable **roles** in some world or ap
 bind to one role, and drive it — perceiving the environment, acting, and communicating —
 while the local agent's reasoning, capabilities, and memory stay on the user's machine.
 
-ABP is **not** specific to AI-Town, and **not** specific to social sims. AI-Town is the first
-host and the embodied-social vocabulary (`abp.social/1`) is the first **World Profile**. Any
-application — a game, a simulation, a different kind of world — can become a host by implementing
-the ABP **Core** plus a World Profile (its own or an existing one). Any local agent can become a
-client by implementing (or downloading a reference implementation of) the client side.
+ABP is **not** specific to any one application, and **not** specific to social sims. The
+embodied-social vocabulary (`abp.social/1`) is the first **World Profile**. Any application — a
+game, a simulation, a different kind of world — can become a host by implementing the ABP **Core**
+plus a World Profile (its own or an existing one). Any local agent can become a client by
+implementing (or downloading a reference implementation of) the client side.
 
 ### 0.1 Roles in the protocol
 
 - **Client** — runs on the user's machine, driven by a local AI agent (Claude Code, Codex, …).
   Initiates all connections. The client is the security kernel (see §6).
-- **Host** — the remote server exposing drivable roles (e.g., AI-Town's engine via an adapter).
+- **Host** — the remote server exposing drivable roles (e.g., a social-sim engine via an adapter).
   Treated as **untrusted** by the client.
 - **Role** — a drivable character/agent slot in the host's world that a client binds to and drives.
 
@@ -391,8 +391,8 @@ that interaction, and only then may it `say` into that conversation. A client MU
 #### 5.6.2 Invite handling (no explicit accept/decline)
 
 `abp.social/1` intentionally has **no** `accept`/`decline` action. The external avatar is treated
-as a **human-like** role: the host auto-accepts/auto-joins invites (as AI-Town already does for
-humans). `invite` is therefore informational — it signals an interaction the avatar has joined (or
+as a **human-like** role: the host auto-accepts/auto-joins invites (as a typical social host
+already does for humans). `invite` is therefore informational — it signals an interaction the avatar has joined (or
 is about to). The avatar's meaningful control is `interact_start` (who to approach), `say` (what to
 communicate), and `interact_leave` (when to leave).
 

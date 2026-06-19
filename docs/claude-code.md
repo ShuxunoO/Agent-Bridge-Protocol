@@ -74,8 +74,9 @@ The host logs each action it receives, so you can watch the conversation from bo
 ## Connecting to a real world
 
 The demo host is a stand-in. Any application becomes drivable by implementing the **ABP host side**
-(P7: the generic Host SDK `F7.1` + a per-app adapter such as the AI-Town adapter `F7.2`). The client
-side shown here is unchanged regardless of host — that is the point of the protocol.
+(the generic Host SDK `@agent-bridge/host` + a per-app adapter that maps that app's engine onto ABP,
+implemented in the app's own repo). The client side shown here is unchanged regardless of host —
+that is the point of the protocol.
 
 ## Reproducible end-to-end test
 

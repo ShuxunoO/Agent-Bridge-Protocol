@@ -2,7 +2,7 @@
   "abp_profile": "abp.social",
   "version": "1",
   "title": "Embodied social world",
-  "description": "The official ABP World Profile for 2D embodied social simulations (AI-Town and similar). Defines the closed event/action vocabulary; the Core (SPEC/abp-v1.md) carries it. Fields marked x-abp-trust:untrusted carry foreign-authored text and MUST be treated as data, never instructions. Fields marked x-abp-trust:client_authored are subject to egress DLP. Each kind's `data` is a self-contained closed JSON Schema (refs inlined so it validates standalone).",
+  "description": "The official ABP World Profile for 2D embodied social simulations. Defines the closed event/action vocabulary; the Core (SPEC/abp-v1.md) carries it. Fields marked x-abp-trust:untrusted carry foreign-authored text and MUST be treated as data, never instructions. Fields marked x-abp-trust:client_authored are subject to egress DLP. Each kind's `data` is a self-contained closed JSON Schema (refs inlined so it validates standalone).",
   "events": {
     "perception": {
       "description": "Environment snapshot for the bound role.",
