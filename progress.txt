@@ -89,7 +89,7 @@ AGENT-BRIDGE — PROGRESS LOG
 
 --- PHASE P7: host SDK + AI-Town adapter (FIRST REAL EXTERNAL LINK) ---
 
-[todo] F7.1 — Generic Host SDK (expose roles over ABP)  (verify: e2e)  <<< KEY MILESTONE
+[done] F7.1 — Generic Host SDK (expose roles over ABP)  (verify: e2e)  <<< KEY MILESTONE
   GOAL:   Server-side helper any app embeds: accept outbound clients, run the host half of pairing
           (issue challenge, verify signature, mint role+profile+capability-scoped tokens), advertise
           + inline the World Profile with its hash, emit events (with monotonic seq), validate+apply
@@ -128,6 +128,34 @@ AGENT-BRIDGE — PROGRESS LOG
 ################################################################################
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
+
+== 2026-06-19 — Session 16: F7.1 generic Host SDK (@agent-bridge/host) ==
+User decisions for P7: (1) AI-Town host = a Node GATEWAY SIDECAR running the Host SDK, bridging to
+Convex via the Convex client (Convex stays engine/DB); (2) do F7.1 now (generic, no AI-Town risk),
+discuss F7.2 before building.
+
+Done (F7.1 PASSED):
+- New package @agent-bridge/host (deps: validator + ws only; verifyEd25519 via node:crypto so it
+  does NOT depend on the client package). AbpHost = WSS server implementing the host half of ABP:
+  pins its own profile + validates all inbound via AbpValidator; hello/hello_ack(inlines
+  profile+hash)/roles_query/roles_list/pair_challenge+verify/pair_result(scoped token)/resume/
+  ping/bye; emit(roleId,event) -> monotonic per-session seq + ring buffer + tracks open-turn
+  allowed_actions; inbound action enforced server-side (caps + allowed_actions + proactive + size)
+  -> onAction; resume backfills buffered events past the cursor or onResume snapshot on a gap;
+  never blocks on an absent client (emit no-ops when unbound; role unbinds on close, token kept).
+
+Evidence (./init.sh exit 0): validator 39 + client 95 + mcp 21 + host 5 = 160, 0 fail.
+host.test.ts (REAL client SDK <-> REAL host, two endpoints, one process): handshake + turn + say
+delivered to onAction w/ corr; resume backfills buffered seq 2 past cursor 1 then keeps driving
+(seq 3); forged pairing signature -> unauthorized; allowed_actions enforced server-side ->
+forbidden (client-side check bypassed via a crafted frame to prove HOST enforcement); unknown
+message type -> bad_message.
+
+*** P7 half done: generic, decoupled Host SDK works two-process. 20/23 features. ***
+NEXT: F7.2 — AI-Town adapter, as a Node gateway sidecar. PAUSED for design discussion with the
+user before touching the ai-town repo. Plan basis: HOST-ADAPTER.md (mapping) + this Host SDK; the
+gateway subscribes to AI-Town actionRequests (new Convex tables/fns), emits ABP events, applies
+ABP actions via Convex mutations; abp.social/1 fits with no protocol changes.
 
 == 2026-06-19 — Session 15: P6 autopilot (F6.1 daemon + F6.2 autopilot + F6.3 config/kill) ==
 F6.1 PASSED — packages/client/src/daemon.ts ConnectionDaemon: persistent outbound link; on drop,

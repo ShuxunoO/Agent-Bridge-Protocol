@@ -1,0 +1,23 @@
+{
+  "name": "@agent-bridge/host",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "ABP/1 generic Host SDK (F7.1): accept outbound clients, run pairing, emit events, validate+apply actions, backfill on resume. Embedded by any host app (e.g. the AI-Town gateway).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test --test-force-exit test/*.test.ts"
+  },
+  "dependencies": {
+    "@agent-bridge/validator": "*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@agent-bridge/client": "*",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.12",
+    "typescript": "^5.9.3"
+  }
+}

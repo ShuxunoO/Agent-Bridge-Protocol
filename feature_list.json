@@ -264,9 +264,10 @@
         {
           "id": "F7.1",
           "title": "Generic host SDK (expose roles over ABP)",
-          "status": "todo",
+          "status": "passed",
           "priority": "medium",
           "verification": "e2e",
+          "evidence": "New package @agent-bridge/host (depends only on validator + ws; verifyEd25519 reimplemented via node:crypto so it does NOT depend on the client). AbpHost: WSS server; pins its own World Profile (hash) and validates ALL inbound via AbpValidator; control plane hello/hello_ack(inlines profile+hash)/roles_query/roles_list/pair_challenge+verify-sig/pair_result(mint role+profile+capability-scoped token)/resume/ping/bye; emit(roleId,event) assigns monotonic per-session seq, buffers (ring) for resume, records open turn allowed_actions; inbound action enforced server-side (capabilities + open turn allowed_actions + proactive + size) -> onAction hook; resume backfills buffered events past the cursor or calls onResume for a snapshot on a gap; never blocks on an absent client (emit no-ops if unbound; role unbinds on socket close, token stays valid for resume). Default bind = open roles get all profile action kinds + proactive; claim_required/closed honored. Verified ./init.sh exit 0: validator 39 + client 95 + mcp 21 + host 5 = 160, 0 fail. host e2e (REAL client SDK <-> REAL host, two endpoints one process): handshake+turn+say delivered to onAction with corr; resume backfills buffered seq past a cursor then keeps driving; forged pairing signature -> unauthorized; allowed_actions enforced server-side -> forbidden; unknown message type -> bad_message.",
           "steps": ["server-side helper: emit events, validate+apply actions, scoped tokens", "host-side conformance tests"],
           "depends_on": ["F1.1"]
         },
