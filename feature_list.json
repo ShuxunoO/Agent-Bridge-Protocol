@@ -339,6 +339,42 @@
           "depends_on": ["F3.2", "F6.2", "F10.1"]
         }
       ]
+    },
+    {
+      "id": "P11",
+      "title": "Heavy infrastructure (planned — see ROADMAP.md). Ordering: H1 load test FIRST, then H2/H3 gated on its numbers.",
+      "features": [
+        {
+          "id": "H1",
+          "title": "Scale: load harness + per-session backpressure + (shard only if measured)",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "rules-based",
+          "notes": "See ROADMAP.md#H1. Definition of done: repeatable load test sustains N concurrent driven avatars (N=25, stretch 100) in one world, zero dropped/dup events, graceful backpressure, documented ceiling. Key cautions: ws.bufferedAmount blowup; resume ring (256) vs backpressure gap; the engine loop (not the network) is the real ceiling — measure tick time vs N first; pendingActionRequests O(pending) query; never block the world (SPEC 4.4.2); use scripted peers (not LLM) for load. Builds on the proven per-role routing + M2 isolation test.",
+          "steps": ["load harness: N scripted clients/roles, measure latency/throughput/drops/tick-time", "per-session outbound backpressure policy", "shard stateless gateways ONLY if the harness shows a network bottleneck", "regression-track the numbers"],
+          "depends_on": ["F9.1", "F7.1"]
+        },
+        {
+          "id": "H2",
+          "title": "7x24 autopilot: long-running unattended real-agent avatars",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "e2e",
+          "notes": "See ROADMAP.md#H2. Builds on F6.1/F6.2/F6.3 (primitives done); the gap is the production real-Claude long-running brain + cost/context governance. Definition of done: a real-agent avatar runs >=24h surviving disconnects/model-errors/idle within a hard cost cap, immediate kill switch, full transcripts, soak-verified. Key cautions: layered cost caps + idle backoff (idle ~= $0); context growth (compaction alone insufficient -> prefer per-turn + persona memory); resume gap -> re-perceive; idempotency on retry (no dup say, dedup on messageUuid+corr); refusal/empty -> noop; kill mid-turn must not block the world; run injection eval continuously; observability mandatory.",
+          "steps": ["per-turn vs persistent brain decision + idle backoff", "layered cost caps + global kill", "supervisor: restart/backoff, transcript rotation, counters", "multi-hour soak with induced disconnects + dup/cost/kill assertions"],
+          "depends_on": ["F6.3", "F3.2"]
+        },
+        {
+          "id": "H3",
+          "title": "OS-level process isolation hardening (harden isolation_mode:process)",
+          "status": "todo",
+          "priority": "low",
+          "verification": "rules-based",
+          "notes": "See ROADMAP.md#H3. Builds on F4.3 (isolation.ts = spawn + scrubbed env today; no fs-scope/egress-allowlist/seccomp yet). Definition of done: a jailbroken model still cannot read user fs/secrets, spawn processes, or reach the network beyond {model API, ABP host} — escape attempts refused. Defense-in-depth; L1 stays primary. Key cautions: the egress paradox (allow exactly model API + host wss, deny the rest); secret-scrub without starving the runtime of its API key; remap persona-memory path inside the jail (L4 intact); decide what's sandboxed (whole agent vs connector) + cross-boundary stdio; platform portability (sandbox-exec/bwrap/container); per-avatar process cost multiplies under H1; keep host-side L0/L2 (different threat direction) distinct.",
+          "steps": ["pick one reference sandbox backend (+ document others)", "egress allowlist (model API + host only) via proxy/netns/container", "fs view + persona-memory remap", "escape-attempt + injection-in-sandbox refusal tests"],
+          "depends_on": ["F4.3"]
+        }
+      ]
     }
   ]
 }

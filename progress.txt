@@ -129,6 +129,17 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-23 — Session 20: heavy-infra development plan (ROADMAP.md + P11) ==
+Wrote ROADMAP.md — the cross-repo design-of-record for the three deferred heavy items, each with
+goal / approach / verification / dependencies / a detailed 注意事项 (considerations) checklist:
+  H1 Scale (sharding, backpressure, horizontal scale, load test) — builds on F9.1 + proven per-role routing.
+  H2 7x24 autopilot (long-running unattended real-agent) — builds on F6.1/6.2/6.3 (primitives done).
+  H3 OS-level process isolation hardening — builds on F4.3 (isolation.ts spawn+scrub; no real sandbox yet).
+feature_list: added phase P11 (H1/H2/H3, status todo, each with a `notes` summary + depends_on the
+foundation it extends). Global rule recorded: do H1's LOAD TEST FIRST and gate H2/H3 on its numbers;
+no Core protocol change for any of them; the 5 security layers must hold under scale / long-horizon /
+inside the sandbox. No code changed this session — planning only. Mirrored in ai-town (M4 planned).
+
 == 2026-06-23 — Session 19: F8.1 agent-agnostic avatar launcher (M2) ==
 Generalized drive-avatar.sh from claude-only to ANY MCP-capable agent: `--agent claude|codex`
 (+ `--name` for distinct personas, `--dry-run` for token-free checks). The key point: the MCP
