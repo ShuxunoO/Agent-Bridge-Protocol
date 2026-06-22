@@ -71,6 +71,27 @@ Then, in the restricted Claude Code session, ask it to drive the avatar. A typic
 
 The host logs each action it receives, so you can watch the conversation from both sides.
 
+## Autonomous (headless) driving
+
+To drive an avatar with a **real, autonomous Claude** (no human in the loop), use the launcher:
+
+```bash
+# 1. start any ABP host (the demo host, or the AI-Town gateway, etc.)
+node packages/mcp/examples/demo-host.ts 19111 &
+# 2. let a headless Claude link + perceive + reason + say/act on its own
+packages/mcp/examples/drive-avatar.sh ws://127.0.0.1:19111 avatar-1
+```
+
+It runs `claude -p` restricted to **only** the six `abp_*` tools (L1, via `--allowedTools`) with the
+locked `persona.md` (L2, via `--append-system-prompt-file`) and a budget cap (`--max-budget-usd`).
+Claude links, waits for turns, and produces its **own** in-character dialogue — the host log shows
+the model-generated lines, not a script. The same launcher drives the AI-Town gateway:
+
+```bash
+(cd ~/Agents/ai-town/avatar-bridge/gateway && node run-host.ts --mock 19112) &
+packages/mcp/examples/drive-avatar.sh ws://127.0.0.1:19112 a:1
+```
+
 ## Connecting to a real world
 
 The demo host is a stand-in. Any application becomes drivable by implementing the **ABP host side**

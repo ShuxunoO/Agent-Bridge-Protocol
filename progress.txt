@@ -129,6 +129,22 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-22 — Session 18: F10.2 headless autonomous Claude avatar launcher (M1) ==
+packages/mcp/examples/drive-avatar.sh runs a REAL headless `claude -p` as an autonomous avatar driver
+against ANY ABP host URL (host-agnostic — belongs here). It restricts Claude to ONLY the six abp_*
+tools (--allowedTools = L1), injects the locked persona.md (--append-system-prompt-file = L2), wires
+the MCP server via a generated --mcp-config -> src/bin.ts, and caps cost (--max-budget-usd).
+Proven TWICE end to end:
+  1. vs the demo host: Claude autonomously abp_link'd, waited for turns, and SAID its own
+     in-character lines (host log: model-generated dialogue, not a script), then interact_leave'd.
+  2. vs the AI-Town gateway (ai-town run-host.ts --mock): interact_start + 3 model-generated says +
+     interact_leave through the real abp.social/1 mapping; persona memory persisted locally at
+     ~/.agent-bridge/persona-memory/a_1.json and never sent to the host.
+This is the first time a REAL autonomous Claude (not a scripted client, not a human clicking tools)
+drives an avatar over the protocol. docs/claude-code.md gained an "Autonomous (headless) driving"
+section. Full suite still green: client 95, host 5, mcp 22, validator 39. feature_list: F10.2 passed.
+Tail (in ai-town): the live-Convex drive (real Claude -> a real AI-Town world) awaits the stack.
+
 == 2026-06-22 — Session 17: F10.1 release versioning + ABP_CORE_VERSION (cross-repo M0) ==
 Coordinated hardening of the agent-bridge <-> ai-town seam so a protocol/profile/version change here
 can never silently break a host adapter. This repo's half:
