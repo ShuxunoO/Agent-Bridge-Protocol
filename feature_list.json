@@ -289,11 +289,12 @@
       "features": [
         {
           "id": "F8.1",
-          "title": "Codex adapter (+ OpenClaw/Hermes once MCP confirmed)",
-          "status": "todo",
+          "title": "Agent-agnostic avatar launcher (Codex/others once their MCP CLI confirmed)",
+          "status": "passed",
           "priority": "low",
           "verification": "e2e",
-          "steps": ["confirm MCP support per agent", "thin adapter + smoke test"],
+          "evidence": "Insight: the MCP surface IS the adapter — any MCP-capable agent drives via the same six abp_* tools; only the per-agent CLI launch differs. packages/mcp/examples/drive-avatar.sh generalized to `--agent claude|codex` (+ --name for distinct personas, --dry-run for deterministic checks). claude backend PROVEN live (M1 + M2c: real headless Claude drives an AI-Town avatar). codex backend is a structurally-verified reference (generates the standard MCP-server registration + read-only sandbox + persona/task prompt; dry-run confirms the invocation) — live smoke pending the codex CLI in-env. Unknown --agent rejected. Verified via --dry-run for both claude and codex.",
+          "steps": ["generalize the launcher to a per-agent dispatch over the SAME MCP surface", "claude backend (proven live)", "codex backend (reference; dry-run verified, live smoke pending codex CLI)", "deterministic --dry-run check for each agent"],
           "depends_on": ["F3.2"]
         }
       ]

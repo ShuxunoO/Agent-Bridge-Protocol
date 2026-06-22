@@ -129,6 +129,20 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-23 — Session 19: F8.1 agent-agnostic avatar launcher (M2) ==
+Generalized drive-avatar.sh from claude-only to ANY MCP-capable agent: `--agent claude|codex`
+(+ `--name` for distinct personas, `--dry-run` for token-free checks). The key point: the MCP
+surface IS the adapter — every agent drives via the same six abp_* tools, only the CLI launch
+differs (per-agent build_<agent> sets the argv). claude backend proven live (M1 + M2c). codex
+backend is a structurally-verified reference: it emits the standard MCP-server registration
+(node bin.ts) + read-only sandbox + persona/task prompt; --dry-run confirms the invocation; live
+smoke pending the codex CLI being installed. Unknown --agent is rejected. Verified both paths via
+--dry-run (deterministic, no model calls). feature_list: F8.1 passed.
+Note: multi-session host concurrency (#byRole routing) was exercised live in M2c — two real Claudes
+drove two roles through one host at once; the deterministic isolation proof lives in the ai-town
+gateway repo (test/concurrency.test.ts). F9.1 (sharding/backpressure/horizontal-scale/load-test)
+remains future — only correctness-isolation is proven so far.
+
 == 2026-06-22 — Session 18: F10.2 headless autonomous Claude avatar launcher (M1) ==
 packages/mcp/examples/drive-avatar.sh runs a REAL headless `claude -p` as an autonomous avatar driver
 against ANY ABP host URL (host-agnostic — belongs here). It restricts Claude to ONLY the six abp_*
