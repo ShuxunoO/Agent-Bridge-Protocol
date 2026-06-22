@@ -129,6 +129,22 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-22 — Session 17: F10.1 release versioning + ABP_CORE_VERSION (cross-repo M0) ==
+Coordinated hardening of the agent-bridge <-> ai-town seam so a protocol/profile/version change here
+can never silently break a host adapter. This repo's half:
+- Versioned all four packages 0.0.0 -> 0.1.0 and pinned internal deps (* -> ^0.1.0), so host adapters
+  consume @agent-bridge/* via pinned file:/semver deps rather than a bare symlink. npm install green;
+  workspace still resolves locally (validator/client/host/mcp all 0.1.0).
+- Extracted the on-wire Core semver to ONE exported constant: ABP_CORE_VERSION ("1.0.0") in
+  @agent-bridge/validator (schemas.ts, exported via index.ts). host.ts (hello_ack) and
+  client/pairing.ts (hello default) now reference it instead of duplicated "1.0.0" magic strings —
+  a real anchor a host adapter can pin.
+- Full suite green after the refactor (tsc typecheck + node:test): client 95, host 5, mcp 22,
+  validator 39 = 161 pass / 0 fail.
+The ai-town side (avatar-bridge/abp-contract.json + gateway/check-contract.ts) pins these versions +
+ABP_CORE_VERSION + the abp.social/1 profileHash and fails loudly on drift. No protocol/spec change
+(abp_core stays 1.0.0, abp.social stays /1) — pure release/packaging hardening. feature_list: F10.1 passed.
+
 == 2026-06-19 — Session 16: F7.1 generic Host SDK (@agent-bridge/host) ==
 User decisions for P7: (1) a host app host = a Node GATEWAY SIDECAR running the Host SDK, bridging to
 Convex via the Convex client (Convex stays engine/DB); (2) do F7.1 now (generic, no a host app risk),

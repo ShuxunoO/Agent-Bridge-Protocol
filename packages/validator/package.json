@@ -1,6 +1,6 @@
 {
   "name": "@agent-bridge/validator",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "ABP/1 Core message validator: envelope + control-plane payloads + data-plane (event/action) envelopes. Closed-schema security boundary. World Profile composition is F1.2.",
   "exports": {

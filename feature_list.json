@@ -312,6 +312,22 @@
           "depends_on": ["F7.1"]
         }
       ]
+    },
+    {
+      "id": "P10",
+      "title": "Release & cross-repo integration contract (M0)",
+      "features": [
+        {
+          "id": "F10.1",
+          "title": "Pinnable package versions + ABP_CORE_VERSION constant for host-adapter contracts",
+          "status": "passed",
+          "priority": "high",
+          "verification": "rules-based",
+          "evidence": "All four packages versioned 0.0.0 -> 0.1.0 with internal deps pinned (* -> ^0.1.0), so host adapters consume @agent-bridge/* via pinned file:/semver deps instead of a bare symlink. Extracted the on-wire Core semver to a single exported constant ABP_CORE_VERSION ('1.0.0') in @agent-bridge/validator; host.ts (hello_ack) and client/pairing.ts (hello) now reference it instead of duplicated magic strings, giving host adapters a real anchor to pin. Full suite green after the refactor: client 95, host 5, mcp 22, validator 39 (tsc typecheck included). Consumed by the ai-town avatar-bridge cross-repo contract gate (abp-contract.json + check-contract.ts) which pins these versions + ABP_CORE_VERSION + the abp.social/1 profileHash and fails loudly on drift.",
+          "steps": ["version all packages 0.1.0 + pin internal deps", "export ABP_CORE_VERSION from validator; use it in host + client", "re-run full suite (typecheck + tests) green"],
+          "depends_on": ["F7.1"]
+        }
+      ]
     }
   ]
 }

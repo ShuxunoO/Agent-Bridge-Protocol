@@ -27,6 +27,13 @@ export function loadBundledProfile(relPath: string): JSONSchema {
   return JSON.parse(readFileSync(join(PROFILES_DIR, relPath), "utf8")) as JSONSchema;
 }
 
+/**
+ * The ABP Core protocol semver advertised on the wire (`hello.abp_core` / `hello_ack.abp_core`,
+ * §4.2). The single source of truth for the Core version — host and client both reference this
+ * instead of a magic string, and host adapters can pin it (see the cross-repo contract check).
+ */
+export const ABP_CORE_VERSION = "1.0.0";
+
 /** Core envelope schema name. */
 export const ENVELOPE_SCHEMA = "envelope";
 

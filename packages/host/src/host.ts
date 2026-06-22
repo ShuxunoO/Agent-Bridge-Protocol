@@ -15,6 +15,7 @@ import {
   AbpValidator,
   profileHash,
   MAX_MESSAGE_BYTES,
+  ABP_CORE_VERSION,
   type PinnedProfile,
   type JSONSchema,
 } from "@agent-bridge/validator";
@@ -181,7 +182,7 @@ export class AbpHost {
       switch (msg.type) {
         case "hello":
           return void send("hello_ack", {
-            abp_core: "1.0.0",
+            abp_core: ABP_CORE_VERSION,
             profile: { id: this.#opts.profile.id, version: this.#opts.profile.version, hash: this.#hash, document: this.#opts.profile.document },
             auth_methods: ["signature"],
           });

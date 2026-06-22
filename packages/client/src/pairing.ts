@@ -1,4 +1,4 @@
-import { ProfileLoader, type PinnedProfile, type ApproveFn } from "@agent-bridge/validator";
+import { ProfileLoader, ABP_CORE_VERSION, type PinnedProfile, type ApproveFn } from "@agent-bridge/validator";
 import { WssTransport } from "./transport.ts";
 import { Keypair } from "./keypair.ts";
 import { Session } from "./session.ts";
@@ -84,7 +84,7 @@ export async function pair(
   const profiles = opts.profiles ?? [{ id: "abp.social", version: "1" }];
 
   // 1. hello -> hello_ack
-  transport.send(makeEnvelope("hello", { abp_core: opts.abpCore ?? "1.0.0", profiles, bindings: opts.bindings ?? ["wss"] }));
+  transport.send(makeEnvelope("hello", { abp_core: opts.abpCore ?? ABP_CORE_VERSION, profiles, bindings: opts.bindings ?? ["wss"] }));
   const ack = await waitFor(transport, (m) => m.type === "hello_ack" || m.type === "error", timeoutMs);
   if (ack.type === "error") throw new PairingError(String(ack.payload.code), String(ack.payload.message));
 

@@ -8,7 +8,7 @@ export type {
   ValidationOk,
   ValidationError,
 } from "./validator.ts";
-export { PAYLOAD_SCHEMA, loadCoreSchema, loadBundledProfile, BUNDLED_PROFILE_FILES } from "./schemas.ts";
+export { PAYLOAD_SCHEMA, loadCoreSchema, loadBundledProfile, BUNDLED_PROFILE_FILES, ABP_CORE_VERSION } from "./schemas.ts";
 export type { JSONSchema } from "./schemas.ts";
 export {
   ProfileLoader,
