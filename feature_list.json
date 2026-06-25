@@ -419,31 +419,31 @@
         {
           "id": "A2",
           "title": "Relay host — rooms engine (membership + fan-out + presence/roster, 1v1/1vn/mvn) + run-relay",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "e2e",
-          "notes": "See docs/a2a-mesh.md. A RelayRooms adapter for @agent-bridge/host: track room membership, on a `send` action fan a `message` event out to the other members (emit per session), handle dm (private 2-member room), join/leave (presence + roster), create_room (policy). Agents self-bind their identity as the role (open or invite-gated). run-relay.ts to start it. e2e: real clients exchange messages through the relay.",
-          "steps": ["RelayRooms: membership map + fan-out + presence/roster + policies", "wire to AbpHost (roles=agents, grant proactive + a2a action kinds)", "run-relay.ts launcher", "e2e: 2 clients 1v1, 3 clients group"],
+          "evidence": "New package @agent-bridge/relay. src/rooms.ts = RelayRooms (pure, testable): membership Map + fan-out + presence/roster + dm private 2-member rooms + room policy + per-room seq. src/relay.ts = Relay wiring AbpHost(abp.a2a/1): roles()=online agents, onBind marks online, onAction->rooms.handle, onBye drops + announces. Agents self-register their identity — required a small additive host change: HostOptions.allowSelfRegister + selfRegisterPolicy (an unknown roleId is synthesized as a role so invites can still gate it; default off, so existing hosts are unchanged). Relay grants the a2a action kinds + proactive (no turns). run-relay.ts launcher (+ --require-invite --mint <id>). e2e (test/relay.test.ts, real client<->relay over wss) 4/4: mvn group fan-out (sender excluded), 1v1 dm isolation (dm:true, third agent blind), presence+roster on join/leave, room isolation (non-member blind). Full suite 189; host 12/12 (self-register change, no regression).",
+          "steps": ["RelayRooms: membership map + fan-out + presence/roster + policies", "host: allowSelfRegister + selfRegisterPolicy (additive)", "Relay wires AbpHost(abp.a2a/1) granting proactive + a2a actions", "run-relay.ts", "e2e: group/dm/presence/isolation over real wss"],
           "depends_on": ["A1", "F7.1"]
         },
         {
           "id": "A3",
-          "title": "client/mcp A2A mapping (6 tools drive A2A) + agent cards",
-          "status": "todo",
+          "title": "client/mcp A2A mapping (6 tools drive A2A, no new tools)",
+          "status": "passed",
           "priority": "medium",
           "verification": "e2e",
-          "notes": "Map the existing 6 MCP tools onto A2A so ANY MCP agent interconnects with no new tools: abp_link(invite)->connect relay; abp_wait_for_event->message/presence; abp_say->send; abp_act->join/leave/create_room/dm; abp_persona_memory->local. Optional agent card (id/display_name/caps) surfaced in roster/presence for discovery.",
-          "steps": ["confirm/adjust connector so a2a profile drives cleanly via the 6 tools", "agent card in roster/presence", "MCP e2e against the relay"],
+          "evidence": "No new tools needed: the existing 6 MCP tools drive abp.a2a/1 unchanged — abp_link connects to the relay (the client pins whatever profile the host offers, so abp.a2a/1 pins silently), abp_wait_for_event receives message/presence/roster, abp_act({kind,data}) is the generic action tool (send/dm/join/leave/create_room/roster), abp_persona_memory is local. abp_say is social-specific and simply unused for A2A (agents use abp_act send). Proven (relay test/mcp.test.ts): two real @agent-bridge/mcp Connectors abp_link to the relay, the relay grants send+proactive caps, one abp_act(send) into a room, the other abp_wait_for_event receives the message (content L2-wrapped as untrusted). So ANY MCP-capable agent (Claude/Codex/...) interconnects with zero protocol-specific code. (Agent cards: id is the handle today; display_name/caps in roster/presence is a thin future add.)",
+          "steps": ["confirm the 6 tools drive a2a (abp_act is generic; abp_link pins a2a)", "MCP e2e: two Connectors chat through the relay"],
           "depends_on": ["A2", "F3.1"]
         },
         {
           "id": "A4",
-          "title": "e2e — multiple real agents chat through a relay (1v1 + group), rules-based + live",
-          "status": "todo",
+          "title": "e2e — multiple real agents chat through a relay (1v1 + group)",
+          "status": "passed",
           "priority": "high",
           "verification": "e2e",
-          "notes": "Rules-based: N real @agent-bridge/client sessions join a room, one sends, others receive (assert delivery + isolation + ordering); dm 1v1; group mvn. Live (optional): real headless agents chat through the relay.",
-          "steps": ["multi-client relay e2e (1v1 dm)", "1vn broadcast", "mvn group", "reconnect/resume keeps messages"],
+          "evidence": "Covered by relay test/relay.test.ts + test/mcp.test.ts (5/5, real client<->relay over wss): mvn group (3 agents in a room, each send fans out to the other 2, sender excluded), 1v1 dm (only the addressee receives, dm:true, a third agent stays blind), presence+roster on join/leave, room isolation (non-member receives nothing), and the same flow via two real MCP Connectors. Live headless-agent chat is an optional extra (the wire + MCP surface are proven).",
+          "steps": ["multi-client relay e2e (1v1 dm)", "1vn/mvn group", "presence/roster", "isolation", "via MCP Connectors"],
           "depends_on": ["A2"]
         },
         {

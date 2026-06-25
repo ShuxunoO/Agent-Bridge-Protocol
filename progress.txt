@@ -129,6 +129,20 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-25 — Session 26: A2A mesh — relay rooms engine + MCP mapping + e2e (A2/A3/A4) ==
+New package @agent-bridge/relay: a rendezvous host serving abp.a2a/1 so any agent on any PC
+interconnects. src/rooms.ts = RelayRooms (pure: membership + fan-out + presence/roster + dm private
+rooms + policy + per-room seq). src/relay.ts wires AbpHost(abp.a2a/1): online agents = roles,
+onAction -> rooms.handle, onBye drops + announces. Agents self-register their identity — added a small
+ADDITIVE host change: HostOptions.allowSelfRegister + selfRegisterPolicy (unknown roleId synthesized as
+a role so invites still gate it; default off => existing hosts unchanged). Relay grants the a2a action
+kinds + proactive (no turns). run-relay.ts launcher (--require-invite, --mint <id>).
+A3: NO new MCP tools — the 6 existing tools drive A2A (abp_act is the generic action verb; abp_link
+pins whatever profile the host offers). A4: e2e over real wss, 5/5 (relay + mcp tests): mvn group
+fan-out (sender excluded), 1v1 dm isolation (dm:true, third agent blind), presence+roster, room
+isolation, AND two real @agent-bridge/mcp Connectors interconnecting. Full suite 189
+(client95/host12/mcp22/relay5/validator55). feature_list: A2/A3/A4 passed. Next: A5 README.
+
 == 2026-06-25 — Session 25: A2A mesh — abp.a2a/1 profile + validator (A1) ==
 New requirement: any agent on any PC interconnects via this protocol; 1v1/1vn/mvn; agent-agnostic;
 HTTP-handshake-inspired; additive. Researched the landscape (Google A2A = the main agent↔agent

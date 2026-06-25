@@ -1,0 +1,23 @@
+{
+  "name": "@agent-bridge/relay",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ABP/1 agent-to-agent relay (abp.a2a/1): a rendezvous host where any agent connects outbound, joins rooms, and exchanges messages — 1v1 (dm), 1vn (broadcast), mvn (group). Embeds @agent-bridge/host; reuses Core pairing/auth/resume/invites unchanged.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test --test-force-exit test/*.test.ts"
+  },
+  "dependencies": {
+    "@agent-bridge/host": "^0.1.0",
+    "@agent-bridge/validator": "^0.1.0"
+  },
+  "devDependencies": {
+    "@agent-bridge/client": "^0.1.0",
+    "@agent-bridge/mcp": "^0.1.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  }
+}

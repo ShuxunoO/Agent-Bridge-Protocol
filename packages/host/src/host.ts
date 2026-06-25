@@ -49,6 +49,14 @@ export type HostOptions = {
    * profile + single-use jti). The same host both mints and verifies, so a symmetric secret suffices.
    */
   inviteSecret?: string;
+  /**
+   * Allow binding a role id that is NOT in roles() — the client self-registers its own identity.
+   * Used by an open mesh / relay (abp.a2a) where agents bring their own id. The synthesized role
+   * uses `selfRegisterPolicy` for its bind policy (so invites can still gate it). Default false.
+   */
+  allowSelfRegister?: boolean;
+  /** Bind policy applied to a self-registered role (default "open"). */
+  selfRegisterPolicy?: "open" | "claim_required" | "closed";
   /** The event kind that carries allowed_actions (default "turn"). */
   turnKind?: string;
   onBind?: (session: HostSession) => void;
@@ -102,6 +110,8 @@ export class AbpHost {
   readonly #byToken = new Map<string, HostSession>();
   readonly #byRole = new Map<string, HostSession>();
   readonly #inviteSecret?: string;
+  readonly #allowSelfRegister: boolean = false;
+  readonly #selfRegisterPolicy: "open" | "claim_required" | "closed" = "open";
   /** Redeemed invite ids (single-use) + explicitly revoked ids — both reject at bind (§4.2.1). */
   readonly #seenJti = new Set<string>();
   readonly #revokedJti = new Set<string>();
@@ -119,6 +129,8 @@ export class AbpHost {
     this.#ttl = opts.tokenTtlMs ?? 3_600_000;
     this.#requireSig = opts.requireSignature ?? true;
     this.#inviteSecret = opts.inviteSecret;
+    this.#allowSelfRegister = opts.allowSelfRegister ?? false;
+    this.#selfRegisterPolicy = opts.selfRegisterPolicy ?? "open";
   }
 
   /**
@@ -328,8 +340,13 @@ export class AbpHost {
   }
 
   #bind(roleId: string, ctx: BindContext): BindDecision {
-    const role = this.#opts.roles().find((r) => r.id === roleId);
-    if (!role) return { ok: false, code: "not_found", message: `role ${roleId} not found` };
+    let role = this.#opts.roles().find((r) => r.id === roleId);
+    if (!role) {
+      // Open mesh / relay: let the client self-register its own identity (abp.a2a). The synthesized
+      // role still carries a bind policy so invites can gate it.
+      if (!this.#allowSelfRegister) return { ok: false, code: "not_found", message: `role ${roleId} not found` };
+      role = { id: roleId, bind_policy: this.#selfRegisterPolicy };
+    }
     if (role.bind_policy === "closed") return { ok: false, code: "forbidden", message: "role is not bindable" };
     if (this.#opts.bind) return this.#opts.bind(roleId, ctx);
     const defaultCaps = [...this.#pinned.actionKinds, "proactive"];
