@@ -129,6 +129,19 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-23 — Session 24: connection invites — live redeem-and-drive (C4) ==
+drive-avatar.sh gained `--invite <abp1-token>`: the agent is told to abp_link({invite}) (one paste =
+connect; url/target/claim all decoded from the token). LIVE capstone proving the user's whole vision:
+started the AI-Town gateway with `run-host.ts --mock --require-invite` (drivable roles claim_required;
+it minted + printed a real abp1.<...> connection invite for a:1). Then ran a REAL headless Claude with
+ONLY that token (no url, no target): it pasted it into abp_link, connected to the GATED gateway, bound
+"Lucky", and acted freely — interact_start Stella, three model-generated reactive lines ("a cliffside
+village where the houses were carved right into the rock and the stairs glowed at night"),
+interact_leave, persona memory updated; world content treated as <untrusted> (L2). Host log confirms
+the full drive; without the invite the claim_required role refuses to bind. So the chain is proven end
+to end: host mints a link -> send to someone else's agent -> abp_link({invite}) -> bound -> free action.
+All of P12 (F12.1 format+validator, F12.2 host/client/mcp, + ai-town gateway wiring) is now live-verified.
+
 == 2026-06-23 — Session 23: F12.2 host mint + client redeem + abp_link({invite}) (C2) ==
 The redemption path. @agent-bridge/host: HostOptions.inviteSecret enables host.mintInvite(roleId,
 {url,ttlMs?,caps?,jti?}) and host.revokeInvite(jti); #bind now verifies an invite claim (sig/exp/role/

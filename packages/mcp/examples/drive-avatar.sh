@@ -8,27 +8,37 @@
 #
 # Usage:
 #   drive-avatar.sh [--agent claude|codex] [--name NAME] [--dry-run] <ws-url> [target=avatar-1] [budget-usd=0.80]
+#   drive-avatar.sh --invite <abp1-token> [--name NAME] [--dry-run] [budget-usd]   # one paste = connect
 # Examples:
 #   drive-avatar.sh ws://127.0.0.1:19111 avatar-1
 #   drive-avatar.sh --name Mara ws://127.0.0.1:19112 a:3 1.00
-#   drive-avatar.sh --agent codex --dry-run ws://127.0.0.1:19112 a:1     # show the codex invocation
+#   drive-avatar.sh --invite "abp1.eyJ..." --name Lucky          # connect via a connection invite
 set -euo pipefail
 
 AGENT="claude"
 NAME="Lucky"
 DRY_RUN=0
+INVITE=""
 POS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --agent) AGENT="$2"; shift 2 ;;
     --name) NAME="$2"; shift 2 ;;
+    --invite) INVITE="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     *) POS+=("$1"); shift ;;
   esac
 done
-URL="${POS[0]:?usage: drive-avatar.sh [--agent claude|codex] [--name NAME] [--dry-run] <ws-url> [target] [budget]}"
-TARGET="${POS[1]:-avatar-1}"
-BUDGET="${POS[2]:-0.80}"
+if [ -n "$INVITE" ]; then
+  # An invite already encodes url + target; the only positional is an optional budget.
+  URL="(from invite)"; TARGET="(from invite)"; BUDGET="${POS[0]:-0.80}"
+  LINK1="Call abp_link with {\"invite\":\"$INVITE\"} — it already encodes where to connect and which role to drive."
+else
+  URL="${POS[0]:?usage: drive-avatar.sh <ws-url> [target] [budget]   (or: --invite <token>)}"
+  TARGET="${POS[1]:-avatar-1}"
+  BUDGET="${POS[2]:-0.80}"
+  LINK1="Call abp_link with {\"url\":\"$URL\",\"target\":\"$TARGET\"}."
+fi
 
 HERE="$(cd "$(dirname "$0")" && pwd)"            # packages/mcp/examples
 REPO="$(cd "$HERE/../../.." && pwd)"             # agent-bridge repo root
@@ -47,7 +57,7 @@ JSON
 read -r -d '' TASK <<EOF || true
 Drive a social avatar NOW, acting ONLY through the agent-bridge MCP tools (no other tools exist for you).
 
-1) Call abp_link with {"url":"$URL","target":"$TARGET"}.
+1) $LINK1
 2) Then loop: call abp_wait_for_event (kinds ["turn","message","invite"]). When you receive a "turn"
    that has a conversation_id, reply IN CHARACTER using abp_say {"conversation_id":<id>,"text":<your line>}.
    Keep each line to one or two short, natural sentences, and actually react to what the other
