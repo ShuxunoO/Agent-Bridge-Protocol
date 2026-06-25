@@ -449,11 +449,11 @@
         {
           "id": "A5",
           "title": "README — design pattern + usage",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "review",
-          "notes": "Update README.md: the A2A mesh design (relay + abp.a2a/1 + rooms + 3-way handshake mapping, reuse of Core/invites), and ESPECIALLY the usage (run a relay, mint an invite, connect an agent, 1v1/1vn/mvn).",
-          "steps": ["README design section", "README usage section (run relay -> invite -> connect -> chat)"],
+          "evidence": "README.md reworked: top now presents BOTH modes (drive a remote avatar/world AND the agent-to-agent mesh); layout table adds packages/relay + a2a/1.json + docs/a2a-mesh.md. New '## Agent-to-agent mesh (abp.a2a/1)' section = the design pattern (relay + rooms + the 3-way-handshake mapping + agent-agnostic via the 6 tools + security) AND concrete USAGE: run-relay (open + --require-invite --mint), abp_link (url/target or invite), and abp_act join/send/dm/create_room/leave/roster + abp_wait_for_event, with copy-paste tool-call examples. Points Chinese readers to docs/a2a-mesh.md. Status section updated.",
+          "steps": ["README design section (relay/rooms/handshake/agent-agnostic/security)", "README usage (run relay -> connect -> join/send/dm)"],
           "depends_on": ["A2", "A3"]
         }
       ]

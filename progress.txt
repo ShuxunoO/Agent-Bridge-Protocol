@@ -141,7 +141,13 @@ A3: NO new MCP tools — the 6 existing tools drive A2A (abp_act is the generic 
 pins whatever profile the host offers). A4: e2e over real wss, 5/5 (relay + mcp tests): mvn group
 fan-out (sender excluded), 1v1 dm isolation (dm:true, third agent blind), presence+roster, room
 isolation, AND two real @agent-bridge/mcp Connectors interconnecting. Full suite 189
-(client95/host12/mcp22/relay5/validator55). feature_list: A2/A3/A4 passed. Next: A5 README.
+(client95/host12/mcp22/relay5/validator55). feature_list: A2/A3/A4 passed.
+
+A5: README.md reworked — presents BOTH modes (drive a remote world + the A2A mesh); new
+"Agent-to-agent mesh (abp.a2a/1)" section with the design pattern (relay + rooms + 3-way-handshake
+mapping + agent-agnostic via the 6 tools + security) and concrete USAGE (run-relay open/--require-
+invite/--mint; abp_link url|invite; abp_act join/send/dm/create_room/leave/roster + abp_wait_for_event,
+copy-paste examples); links docs/a2a-mesh.md (中文). feature_list: A5 passed. P13 (A2A mesh) COMPLETE.
 
 == 2026-06-25 — Session 25: A2A mesh — abp.a2a/1 profile + validator (A1) ==
 New requirement: any agent on any PC interconnects via this protocol; 1v1/1vn/mvn; agent-agnostic;
