@@ -129,6 +129,23 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-23 — Session 21: connection invites — one-link onboarding (plan, P12) ==
+Designed "connection invites": a host clicks [Connect] -> gets a pasteable credential -> sends it to
+someone else's local Agent assistant -> the assistant pastes it into abp_link and is in, driving an
+avatar. Requirement: protocol-level + DECOUPLED from any host (ai-town), for generality.
+Key finding: the wire protocol already supports this — bind_policy=claim_required + a `claim` carried
+in pair_request + a stated "reject replayed claims" rule (SPEC 4.2). So NO wire change. We only add:
+  - a standard Invite token format `abp1.<b64url(payload)>.<b64url(sig)>` packaging
+    {url, profile, role|'*', caps?, exp, jti}, signed by the host key; the signed payload IS the claim.
+  - host SDK: mintInvite() + inviteClaimVerifier() (a ready bind callback: verify sig/exp/role/jti
+    single-use + revocation + optional caps trim).
+  - client SDK: parseInvite(); mcp abp_link gains an optional `invite` arg (no new tool, stays 6).
+Security = capability/least-privilege: expiring, single-use (jti), role-scoped, caps-trimmable,
+signed (unforgeable), revocable. Verification: rules-based first (reject tampered/expired/replayed/
+wrong-role/bad-profile), then e2e (mint -> abp_link({invite}) -> drive). Doc: docs/connection-invites.md.
+feature_list: P12 (F12.1 SPEC+validator, F12.2 host mint/client redeem). ai-town side is a thin
+[Connect] UI only (its M5). Planning only — no code changed.
+
 == 2026-06-23 — Session 20: heavy-infra development plan (ROADMAP.md + P11) ==
 Wrote ROADMAP.md — the cross-repo design-of-record for the three deferred heavy items, each with
 goal / approach / verification / dependencies / a detailed 注意事项 (considerations) checklist:

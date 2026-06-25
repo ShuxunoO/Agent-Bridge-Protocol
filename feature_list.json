@@ -375,6 +375,32 @@
           "depends_on": ["F4.3"]
         }
       ]
+    },
+    {
+      "id": "P12",
+      "title": "Connection invites — one-link onboarding (see docs/connection-invites.md). Protocol-level + host-agnostic; rides the existing claim_required bind path, no wire change.",
+      "features": [
+        {
+          "id": "F12.1",
+          "title": "ABP Invite credential format + validator (SPEC additive)",
+          "status": "todo",
+          "priority": "high",
+          "verification": "rules-based",
+          "notes": "See docs/connection-invites.md. A pasteable token `abp1.<b64url(payload)>.<b64url(sig)>` packaging {url, profile, role|'*', caps?, exp, jti} signed by the host key; the signed payload IS the `claim` carried in pair_request (reuses the existing claim_required path — NO wire change). SPEC gets a new additive 'Invite credentials' section + a standard claim-verification scheme; @agent-bridge/validator gains parse/verify + unit tests. Security (capability = least privilege): must reject tampered / expired / replayed(jti reused) / wrong-role / unsupported-profile. Additive => minor version bump per SPEC 9; abp.social profile unchanged.",
+          "steps": ["SPEC: add 'Invite credentials' section (format + standard verification, additive)", "validator: parseInvite + verifyInvite", "unit tests: happy path + reject tampered/expired/replayed/wrong-role/bad-profile"],
+          "depends_on": ["F1.2"]
+        },
+        {
+          "id": "F12.2",
+          "title": "Host mint + client redeem + abp_link({invite})",
+          "status": "todo",
+          "priority": "high",
+          "verification": "e2e",
+          "notes": "See docs/connection-invites.md. @agent-bridge/host: mintInvite(roleId,{ttl,caps?,oneTime?}) -> token, and inviteClaimVerifier(hostKey,{seenJti}) -> a ready-made bind callback (verify sig/exp/role/jti, optional caps trimming, revocation set). @agent-bridge/client: parseInvite(token) -> {url,target,claim,profile}. @agent-bridge/mcp: abp_link gains an optional `invite` arg (decode -> link); NO new tool (stays 6). e2e: host mints -> abp_link({invite}) -> bound -> perceive/say. Host app only calls mintInvite + plugs in inviteClaimVerifier; all logic stays in agent-bridge (decoupled).",
+          "steps": ["host: mintInvite + inviteClaimVerifier (single-use jti, revocation)", "client: parseInvite", "mcp: abp_link accepts `invite`", "e2e: mint -> abp_link({invite}) -> drive"],
+          "depends_on": ["F12.1", "F7.1", "F3.1"]
+        }
+      ]
     }
   ]
 }
