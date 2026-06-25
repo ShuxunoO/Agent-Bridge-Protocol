@@ -27,3 +27,5 @@ export type {
   ProfileLoadOk,
   ProfileLoadError,
 } from "./profile.ts";
+export { signInvite, decodeInvite, verifyInvite, INVITE_PREFIX } from "./invite.ts";
+export type { InvitePayload, InviteVerifyResult, InviteVerifyOk, InviteVerifyError } from "./invite.ts";

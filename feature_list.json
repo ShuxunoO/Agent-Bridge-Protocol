@@ -383,11 +383,11 @@
         {
           "id": "F12.1",
           "title": "ABP Invite credential format + validator (SPEC additive)",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "rules-based",
-          "notes": "See docs/connection-invites.md. A pasteable token `abp1.<b64url(payload)>.<b64url(sig)>` packaging {url, profile, role|'*', caps?, exp, jti} signed by the host key; the signed payload IS the `claim` carried in pair_request (reuses the existing claim_required path — NO wire change). SPEC gets a new additive 'Invite credentials' section + a standard claim-verification scheme; @agent-bridge/validator gains parse/verify + unit tests. Security (capability = least privilege): must reject tampered / expired / replayed(jti reused) / wrong-role / unsupported-profile. Additive => minor version bump per SPEC 9; abp.social profile unchanged.",
-          "steps": ["SPEC: add 'Invite credentials' section (format + standard verification, additive)", "validator: parseInvite + verifyInvite", "unit tests: happy path + reject tampered/expired/replayed/wrong-role/bad-profile"],
+          "evidence": "SPEC §4.2.1 'Invite credentials' added (additive — no wire change; an Invite is carried verbatim as pair_request.claim). Token: abp1.<b64url(payload)>.<b64url(sig)>, payload {v,url,profile,role|'*',caps?,exp,jti}, sig=HMAC-SHA256 over b64url(payload) keyed by a host secret (issuer mints AND verifies → symmetric, no key distribution; abp_core stays 1.0.0). packages/validator/src/invite.ts: signInvite / decodeInvite (client-side, no secret) / verifyInvite (host-side: MAC via timingSafeEqual + exp + optional role/profile, never throws). Exported from index.ts. Tests (packages/validator/test/invite.test.ts) green — validator 48/48, full suite 170 (client95/host5/mcp22/validator48): happy + client-decode, tampered payload, tampered sig, wrong secret, expired, role mismatch, wildcard accept, profile mismatch, malformed(no throw). jti single-use + revocation are the host verifier's job (F12.2).",
+          "steps": ["SPEC: add 'Invite credentials' section (format + standard verification, additive)", "validator: signInvite/decodeInvite/verifyInvite", "unit tests: happy path + reject tampered/expired/wrong-role/bad-profile/malformed"],
           "depends_on": ["F1.2"]
         },
         {

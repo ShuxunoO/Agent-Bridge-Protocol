@@ -198,6 +198,39 @@ Security requirements:
   public key; a client MAY **pin** it (trust-on-first-use or out-of-band) to detect a substituted
   host/world. Clients SHOULD pin the host pubkey for autopilot/unattended use.
 
+#### 4.2.1 Invite credentials (a standard `claim` format — additive, no wire change)
+
+A **claim credential** (§4.2 step 4) is an opaque string; this section defines one standard,
+self-describing format so a host can **mint** a single pasteable credential and any ABP client can
+**redeem** it with no other configuration. It does **not** change any message type or the wire: an
+Invite is carried verbatim as the `pair_request.claim`, and the host verifies it during bind.
+
+An **Invite** is `abp1.<b64url(payload)>.<b64url(sig)>` where `payload` is JSON:
+
+| field | req | meaning |
+|---|---|---|
+| `v` | yes | format version (`1`) |
+| `url` | yes | the host transport URL the client should connect to (`wss://…`; `ws://` loopback only) |
+| `profile` | yes | `{ id, version }` the world is bound to (the client pins it as usual, §5.5) |
+| `role` | yes | the role id this invite authorizes binding (a single role; `"*"` = any free role, host policy permitting) |
+| `caps` | no | a subset of the profile's action kinds to grant (least-privilege; default = role's normal grant) |
+| `exp` | yes | expiry (epoch ms). An Invite MUST expire. |
+| `jti` | yes | unique credential id, for single/limited use + replay rejection (§4.2 already mandates rejecting replayed claims) |
+
+`sig` is a MAC over the exact `b64url(payload)` signing input, keyed by a host secret
+(HMAC-SHA-256 in this version) — the **issuing host both mints and verifies**, so a symmetric key
+suffices and no key distribution is needed. The client treats the whole token as the opaque
+`claim`; it MAY read `url`/`profile`/`role` from the payload to know where to connect, but MUST NOT
+trust the payload for anything security-relevant (only the host's verification at bind is
+authoritative).
+
+On bind, the host MUST reject an Invite that: fails MAC verification (forged/tampered), is expired,
+names a `role` other than the requested target, names a `profile` other than the bound one, or whose
+`jti` has already been redeemed (single use) or revoked. A rejected Invite → `error`
+(`unauthorized`). Capabilities granted MUST be the intersection of the role's normal grant and any
+`caps` in the Invite. Invites are bearer credentials: transmit over a secure channel, keep them
+short-lived, and prefer single use.
+
 ### 4.3 Data plane
 
 Exactly two data-plane message **types**: `event` (H→C) and `action` (C→H). Their envelopes are

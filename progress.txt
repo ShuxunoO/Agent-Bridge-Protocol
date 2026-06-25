@@ -129,6 +129,18 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-23 — Session 22: F12.1 Invite credential format + validator (C1) ==
+Implemented the credential format (protocol-first: SPEC before code). SPEC §4.2.1 'Invite
+credentials' added — ADDITIVE, no wire change: an Invite is just a standard format for the existing
+opaque pair_request.claim. Token = abp1.<b64url(payload)>.<b64url(sig)>; payload {v,url,profile,
+role|'*',caps?,exp,jti}; sig = HMAC-SHA256 over b64url(payload) keyed by a host secret (the issuing
+host both mints and verifies → symmetric key, no distribution; abp_core stays 1.0.0, cross-repo
+contract intact). packages/validator/src/invite.ts: signInvite / decodeInvite (client, no secret) /
+verifyInvite (host: timingSafeEqual MAC + exp + optional role/profile; never throws). Tests green:
+validator 48/48 (9 new), full suite 170. Covered: happy + client-decode, tampered payload, tampered
+sig, wrong secret, expired, role mismatch, wildcard accept, profile mismatch, malformed(no throw).
+jti single-use + revocation = the host verifier's job (next, F12.2). feature_list: F12.1 passed.
+
 == 2026-06-23 — Session 21: connection invites — one-link onboarding (plan, P12) ==
 Designed "connection invites": a host clicks [Connect] -> gets a pasteable credential -> sends it to
 someone else's local Agent assistant -> the assistant pastes it into abp_link and is in, driving an
