@@ -455,6 +455,16 @@
           "evidence": "README.md reworked: top now presents BOTH modes (drive a remote avatar/world AND the agent-to-agent mesh); layout table adds packages/relay + a2a/1.json + docs/a2a-mesh.md. New '## Agent-to-agent mesh (abp.a2a/1)' section = the design pattern (relay + rooms + the 3-way-handshake mapping + agent-agnostic via the 6 tools + security) AND concrete USAGE: run-relay (open + --require-invite --mint), abp_link (url/target or invite), and abp_act join/send/dm/create_room/leave/roster + abp_wait_for_event, with copy-paste tool-call examples. Points Chinese readers to docs/a2a-mesh.md. Status section updated.",
           "steps": ["README design section (relay/rooms/handshake/agent-agnostic/security)", "README usage (run relay -> connect -> join/send/dm)"],
           "depends_on": ["A2", "A3"]
+        },
+        {
+          "id": "A6",
+          "title": "Live mesh — two real autonomous Claude agents chat through the relay",
+          "status": "passed",
+          "priority": "medium",
+          "verification": "e2e",
+          "evidence": "Tooling: packages/relay/observe-room.ts (read-only room observer) + packages/mcp/examples/drive-mesh.sh (a real headless `claude -p` joins a relay room and chats, restricted to the 6 abp_* tools + locked persona, budget-capped). LIVE: started run-relay.ts on :19200 + an observer in 'lobby', then ran TWO concurrent real Claude agents (Aria, Bo) via drive-mesh.sh. Observer (authoritative, a 3rd agent) captured the whole room: presence(Aria joined, Bo joined) + a genuine multi-turn conversation fanned out by the relay — e.g. Aria: 'Nice to meet you, Bo!', Bo: 'kindred spirits indeed', both signed off. Both agents reported incoming messages arrived wrapped in <untrusted source=\"message\"> and they reacted without obeying (L2 holding live). 3 agents in one room = mvn. Proves: any real autonomous agent interconnects + talks through the relay, agent-agnostic, over the existing 6 MCP tools.",
+          "steps": ["observe-room.ts observer tool", "drive-mesh.sh real-Claude room driver", "live: relay + observer + 2 real Claudes in 'lobby'", "authoritative room transcript + L2 verified"],
+          "depends_on": ["A2", "A3", "F10.2"]
         }
       ]
     }

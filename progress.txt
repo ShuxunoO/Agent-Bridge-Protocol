@@ -147,7 +147,16 @@ A5: README.md reworked — presents BOTH modes (drive a remote world + the A2A m
 "Agent-to-agent mesh (abp.a2a/1)" section with the design pattern (relay + rooms + 3-way-handshake
 mapping + agent-agnostic via the 6 tools + security) and concrete USAGE (run-relay open/--require-
 invite/--mint; abp_link url|invite; abp_act join/send/dm/create_room/leave/roster + abp_wait_for_event,
-copy-paste examples); links docs/a2a-mesh.md (中文). feature_list: A5 passed. P13 (A2A mesh) COMPLETE.
+copy-paste examples); links docs/a2a-mesh.md (中文). feature_list: A5 passed.
+
+A6 — LIVE mesh capstone: packages/relay/observe-room.ts (read-only room observer) +
+packages/mcp/examples/drive-mesh.sh (a real headless claude joins a relay room + chats, 6 abp_* tools
++ locked persona, budget-capped). Ran run-relay :19200 + an observer in 'lobby', then TWO concurrent
+real Claude agents (Aria, Bo). Observer captured the whole room: presence + a genuine multi-turn chat
+fanned out by the relay (Aria/Bo introduced themselves, reacted to each other — 'kindred spirits
+indeed' — and signed off). Both agents confirmed incoming messages arrived <untrusted>-wrapped and
+they reacted without obeying (L2 live). 3 agents in one room = mvn. relay 5/5 still green. P13 (A2A
+mesh) COMPLETE — any real autonomous agent interconnects + talks through the relay.
 
 == 2026-06-25 — Session 25: A2A mesh — abp.a2a/1 profile + validator (A1) ==
 New requirement: any agent on any PC interconnects via this protocol; 1v1/1vn/mvn; agent-agnostic;
