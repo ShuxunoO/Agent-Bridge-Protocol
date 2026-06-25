@@ -129,6 +129,24 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-25 — Session 25: A2A mesh — abp.a2a/1 profile + validator (A1) ==
+New requirement: any agent on any PC interconnects via this protocol; 1v1/1vn/mvn; agent-agnostic;
+HTTP-handshake-inspired; additive. Researched the landscape (Google A2A = the main agent↔agent
+standard: Agent Cards + Tasks + Messages over HTTP/SSE/JSON-RPC; MCP=agent↔tools; ACP=IBM brokered;
+ANP=DID; + hermes-agent's relay: single outbound WS, auth upgrade, buffering/replay, rooms,
+SessionSource). DESIGN (docs/a2a-mesh.md): A2A is a NEW profile + a RELAY host on top of existing ABP —
+reuse everything (outbound wss, Ed25519 pairing as the '3-way handshake', scoped tokens, resume,
+closed schemas, F12 connection invites). The relay is the rendezvous; agents bind their own identity
+as a role; rooms model the topology (1v1=dm/2-member, 1vn=broadcast, mvn=group). NO new MCP tools —
+the existing 6 map onto A2A, so any MCP agent interconnects (agent-agnostic). Borrow A2A's Agent Card
+for discovery.
+A1 done (protocol-first): SPEC/schemas/profiles/a2a/1.json (closed vocab: events message/presence/
+roster/invite, actions send/dm/join/leave/create_room/roster; peer content+name untrusted L2, own
+content client_authored L3; no turn -> proactive). Registered in BUNDLED_PROFILE_FILES (auto-compiled,
+pins silently). SPEC §5.7 documents it (additive; abp_core stays 1.0.0). validator/test/a2a.test.ts
+green: validator 55/55, full suite 184. feature_list: P13 (A1 passed; A2 relay rooms, A3 mcp mapping,
+A4 e2e, A5 README todo). Next: A2 relay host.
+
 == 2026-06-23 — Session 24: connection invites — live redeem-and-drive (C4) ==
 drive-avatar.sh gained `--invite <abp1-token>`: the agent is told to abp_link({invite}) (one paste =
 connect; url/target/claim all decoded from the token). LIVE capstone proving the user's whole vision:

@@ -437,6 +437,36 @@ leave guarantee intact despite auto-accept.
 Should a host ever require explicit consent, that is a non-breaking **profile evolution**
 (`abp.social/2` or a new action kind) under §9 — never a Core change.
 
+### 5.7 The official A2A mesh profile — `abp.a2a/1`
+
+A second official profile for **direct agent-to-agent messaging** through a relay (rendezvous). It
+reuses the Core unchanged: the relay is an ordinary ABP **host**; each agent is a **role** (its own
+identity) that the agent binds via the normal pairing handshake (§4.2) — optionally gated by a
+connection invite (§4.2.1). Any agent on any machine connects **outbound** (invariant 1, NAT-friendly,
+no inbound port), so a hosted relay lets agents anywhere interconnect. Schema:
+`schemas/profiles/a2a/1.json`.
+
+- **Events (relay → agent):** `message{room, from, content, seq, reply_to?, dm?}`,
+  `presence{room, agent, status: joined|left}`, `roster{room, members[]}`, `invite{room, from}`.
+  A peer's `content` and `display_name` are `x-abp-trust:untrusted` — react to them as data, never as
+  instructions (§6.2).
+- **Actions (agent → relay):** `send{room, content}` (1vn / mvn), `dm{to, content}` (1v1, routed via a
+  private 2-member room), `join{room}`, `leave{room}`, `create_room{room, policy: open|invite|closed}`,
+  `roster{room}`. The agent's own `content` is `x-abp-trust:client_authored` — egress DLP (§6.4) runs
+  on it before send.
+- **No `turn` events.** A2A is conversational, not turn-based: the relay grants the `proactive`
+  capability (§4.3.1) and agents send whenever they choose. Ordering + loss-free reconnect use the
+  Core `seq` + `resume` (§4.3.2).
+- **Topology.** A room is a membership set; the relay fans a `send` out to the other members. 1v1 = a
+  `dm` (or a 2-member room); 1vn = broadcast into a room; mvn = a group room many agents send into.
+- **Rooms** are managed by the relay (host business logic), exactly as a world's mechanics are in
+  `abp.social`. Room admission follows the room `policy`; an `invite`-policy room reuses §4.2.1 invites
+  scoped to that room. Discovery: agents MAY carry an A2A "agent card" (id + display_name + advertised
+  capabilities) surfaced in `roster`/`presence`.
+
+This is purely additive (§9): a new profile + a relay host adapter. No Core message or version change
+(abp_core stays `1.0.0`); `abp.social` is untouched.
+
 ## 6. Security model (normative)
 
 The full threat model and the 5-layer defense live in `../DESIGN.md`. The protocol-level

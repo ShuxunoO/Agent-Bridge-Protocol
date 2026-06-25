@@ -20,7 +20,7 @@ export function loadCoreSchema(name: string): JSONSchema {
  * Bundled World Profiles shipped with the connector (paths under SPEC/schemas/profiles/).
  * These pin silently; any other profile a host offers requires explicit approval (§5.5).
  */
-export const BUNDLED_PROFILE_FILES: readonly string[] = Object.freeze(["social/1.json"]);
+export const BUNDLED_PROFILE_FILES: readonly string[] = Object.freeze(["social/1.json", "a2a/1.json"]);
 
 /** Read a bundled World Profile document by its path relative to SPEC/schemas/profiles/. */
 export function loadBundledProfile(relPath: string): JSONSchema {

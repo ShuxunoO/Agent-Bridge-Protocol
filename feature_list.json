@@ -401,6 +401,62 @@
           "depends_on": ["F12.1", "F7.1", "F3.1"]
         }
       ]
+    },
+    {
+      "id": "P13",
+      "title": "Agent-to-Agent mesh — any agent on any PC interconnects via a relay (1v1/1vn/mvn). See docs/a2a-mesh.md. Additive: a new profile + a relay host; Core unchanged.",
+      "features": [
+        {
+          "id": "A1",
+          "title": "abp.a2a/1 messaging profile + SPEC §5.7 + validator",
+          "status": "passed",
+          "priority": "high",
+          "verification": "rules-based",
+          "evidence": "SPEC/schemas/profiles/a2a/1.json: closed event/action vocabulary for agent-to-agent messaging through a relay — events message/presence/roster/invite, actions send/dm/join/leave/create_room/roster; peer content+display_name x-abp-trust:untrusted (L2), own content client_authored (L3). No turn events (agents send proactively). Added to BUNDLED_PROFILE_FILES so it pins silently; ProfileLoader auto-compiles it. SPEC §5.7 documents it (additive; abp_core stays 1.0.0, abp.social untouched). Tests (validator/test/a2a.test.ts) green — validator 55/55, full suite 184 (client95/host12/mcp22/validator55): pins with expected vocabulary; accepts message event + send/dm/join/create_room; rejects unknown kind / unknown field / oversize content / bad enum; trust paths correct (message.content+from.display_name untrusted, send/dm.content client_authored).",
+          "steps": ["author abp.a2a/1 closed schema (rooms messaging vocab)", "register in BUNDLED_PROFILE_FILES", "SPEC §5.7", "rules-based unit tests (pin/validate/reject/trust)"],
+          "depends_on": ["F1.2"]
+        },
+        {
+          "id": "A2",
+          "title": "Relay host — rooms engine (membership + fan-out + presence/roster, 1v1/1vn/mvn) + run-relay",
+          "status": "todo",
+          "priority": "high",
+          "verification": "e2e",
+          "notes": "See docs/a2a-mesh.md. A RelayRooms adapter for @agent-bridge/host: track room membership, on a `send` action fan a `message` event out to the other members (emit per session), handle dm (private 2-member room), join/leave (presence + roster), create_room (policy). Agents self-bind their identity as the role (open or invite-gated). run-relay.ts to start it. e2e: real clients exchange messages through the relay.",
+          "steps": ["RelayRooms: membership map + fan-out + presence/roster + policies", "wire to AbpHost (roles=agents, grant proactive + a2a action kinds)", "run-relay.ts launcher", "e2e: 2 clients 1v1, 3 clients group"],
+          "depends_on": ["A1", "F7.1"]
+        },
+        {
+          "id": "A3",
+          "title": "client/mcp A2A mapping (6 tools drive A2A) + agent cards",
+          "status": "todo",
+          "priority": "medium",
+          "verification": "e2e",
+          "notes": "Map the existing 6 MCP tools onto A2A so ANY MCP agent interconnects with no new tools: abp_link(invite)->connect relay; abp_wait_for_event->message/presence; abp_say->send; abp_act->join/leave/create_room/dm; abp_persona_memory->local. Optional agent card (id/display_name/caps) surfaced in roster/presence for discovery.",
+          "steps": ["confirm/adjust connector so a2a profile drives cleanly via the 6 tools", "agent card in roster/presence", "MCP e2e against the relay"],
+          "depends_on": ["A2", "F3.1"]
+        },
+        {
+          "id": "A4",
+          "title": "e2e — multiple real agents chat through a relay (1v1 + group), rules-based + live",
+          "status": "todo",
+          "priority": "high",
+          "verification": "e2e",
+          "notes": "Rules-based: N real @agent-bridge/client sessions join a room, one sends, others receive (assert delivery + isolation + ordering); dm 1v1; group mvn. Live (optional): real headless agents chat through the relay.",
+          "steps": ["multi-client relay e2e (1v1 dm)", "1vn broadcast", "mvn group", "reconnect/resume keeps messages"],
+          "depends_on": ["A2"]
+        },
+        {
+          "id": "A5",
+          "title": "README — design pattern + usage",
+          "status": "todo",
+          "priority": "high",
+          "verification": "review",
+          "notes": "Update README.md: the A2A mesh design (relay + abp.a2a/1 + rooms + 3-way handshake mapping, reuse of Core/invites), and ESPECIALLY the usage (run a relay, mint an invite, connect an agent, 1v1/1vn/mvn).",
+          "steps": ["README design section", "README usage section (run relay -> invite -> connect -> chat)"],
+          "depends_on": ["A2", "A3"]
+        }
+      ]
     }
   ]
 }
