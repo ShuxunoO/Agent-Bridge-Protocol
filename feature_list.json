@@ -393,11 +393,11 @@
         {
           "id": "F12.2",
           "title": "Host mint + client redeem + abp_link({invite})",
-          "status": "todo",
+          "status": "passed",
           "priority": "high",
           "verification": "e2e",
-          "notes": "See docs/connection-invites.md. @agent-bridge/host: mintInvite(roleId,{ttl,caps?,oneTime?}) -> token, and inviteClaimVerifier(hostKey,{seenJti}) -> a ready-made bind callback (verify sig/exp/role/jti, optional caps trimming, revocation set). @agent-bridge/client: parseInvite(token) -> {url,target,claim,profile}. @agent-bridge/mcp: abp_link gains an optional `invite` arg (decode -> link); NO new tool (stays 6). e2e: host mints -> abp_link({invite}) -> bound -> perceive/say. Host app only calls mintInvite + plugs in inviteClaimVerifier; all logic stays in agent-bridge (decoupled).",
-          "steps": ["host: mintInvite + inviteClaimVerifier (single-use jti, revocation)", "client: parseInvite", "mcp: abp_link accepts `invite`", "e2e: mint -> abp_link({invite}) -> drive"],
+          "evidence": "@agent-bridge/host: HostOptions.inviteSecret enables host.mintInvite(roleId,{url,ttlMs?,caps?,jti?}) -> token + host.revokeInvite(jti); #bind now verifies an invite claim (verifyInvite sig/exp/role/profile) + single-use jti set + revocation set, granting caps = role default ∩ invite caps. No standalone factory needed — it's built in (the bind has the profile + default caps). @agent-bridge/client: parseInvite(token) -> {url,target,claim,profile}. @agent-bridge/mcp: abp_link gains an optional `invite` arg (url/target/claim decoded from it); NO new tool (stays 6); url/target now optional when invite given. e2e (host test, real client<->host over wss) 12/12: mint->parseInvite->pair binds a claim_required role; claim_required rejects WITHOUT an invite; single-use (same jti twice -> unauthorized); caps intersection (caps:['say'] -> only 'say'); expired rejected; tampered rejected; open role still binds with no claim (regression). Full suite 177 (client95/host12/mcp22/validator48).",
+          "steps": ["host: inviteSecret + mintInvite + revokeInvite + #bind invite verification (single-use jti)", "client: parseInvite", "mcp: abp_link accepts `invite`", "e2e: mint -> pair({claim}) -> bound; reject no-claim/replay/expired/tampered"],
           "depends_on": ["F12.1", "F7.1", "F3.1"]
         }
       ]

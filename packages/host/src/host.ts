@@ -14,10 +14,13 @@ import {
   ProfileLoader,
   AbpValidator,
   profileHash,
+  signInvite,
+  verifyInvite,
   MAX_MESSAGE_BYTES,
   ABP_CORE_VERSION,
   type PinnedProfile,
   type JSONSchema,
+  type InvitePayload,
 } from "@agent-bridge/validator";
 import { verifyEd25519 } from "./verify.ts";
 
@@ -40,6 +43,12 @@ export type HostOptions = {
   requireSignature?: boolean;
   /** Session token lifetime (default 1h). */
   tokenTtlMs?: number;
+  /**
+   * Secret for minting + verifying Invite credentials (§4.2.1). When set, the host can `mintInvite`
+   * a pasteable credential and a `claim` that is a valid Invite is accepted at bind (sig/exp/role/
+   * profile + single-use jti). The same host both mints and verifies, so a symmetric secret suffices.
+   */
+  inviteSecret?: string;
   /** The event kind that carries allowed_actions (default "turn"). */
   turnKind?: string;
   onBind?: (session: HostSession) => void;
@@ -92,6 +101,10 @@ export class AbpHost {
   #wss?: WebSocketServer;
   readonly #byToken = new Map<string, HostSession>();
   readonly #byRole = new Map<string, HostSession>();
+  readonly #inviteSecret?: string;
+  /** Redeemed invite ids (single-use) + explicitly revoked ids — both reject at bind (§4.2.1). */
+  readonly #seenJti = new Set<string>();
+  readonly #revokedJti = new Set<string>();
 
   constructor(opts: HostOptions) {
     this.#opts = opts;
@@ -105,6 +118,31 @@ export class AbpHost {
     this.#turnKind = opts.turnKind ?? "turn";
     this.#ttl = opts.tokenTtlMs ?? 3_600_000;
     this.#requireSig = opts.requireSignature ?? true;
+    this.#inviteSecret = opts.inviteSecret;
+  }
+
+  /**
+   * Mint a pasteable Invite credential (§4.2.1) authorizing binding `roleId` at `url`. Requires
+   * `inviteSecret`. The returned token is given out of band to a client, which redeems it via
+   * pair_request.claim (the host verifies it at bind). Single-use by default (unique jti).
+   */
+  mintInvite(roleId: string, opts: { url: string; ttlMs?: number; caps?: string[]; jti?: string }): string {
+    if (!this.#inviteSecret) throw new Error("mintInvite requires inviteSecret in HostOptions");
+    const payload: InvitePayload = {
+      v: 1,
+      url: opts.url,
+      profile: { id: this.#opts.profile.id, version: this.#opts.profile.version },
+      role: roleId,
+      caps: opts.caps,
+      exp: Date.now() + (opts.ttlMs ?? 3_600_000),
+      jti: opts.jti ?? newId(),
+    };
+    return signInvite(payload, this.#inviteSecret);
+  }
+
+  /** Revoke an invite by its jti so it can no longer be redeemed. */
+  revokeInvite(jti: string): void {
+    this.#revokedJti.add(jti);
   }
 
   /** Start listening on a port (0 = ephemeral). Resolves with the bound port. */
@@ -294,10 +332,26 @@ export class AbpHost {
     if (!role) return { ok: false, code: "not_found", message: `role ${roleId} not found` };
     if (role.bind_policy === "closed") return { ok: false, code: "forbidden", message: "role is not bindable" };
     if (this.#opts.bind) return this.#opts.bind(roleId, ctx);
+    const defaultCaps = [...this.#pinned.actionKinds, "proactive"];
+    // Invite path (§4.2.1): if a claim is present and we can verify invites, the claim MUST be a
+    // valid, unused, role/profile-matching Invite. Granted caps = role default ∩ invite caps.
+    if (ctx.claim && this.#inviteSecret) {
+      const v = verifyInvite(ctx.claim, this.#inviteSecret, {
+        expectedRole: roleId,
+        expectedProfile: { id: this.#opts.profile.id, version: this.#opts.profile.version },
+      });
+      if (!v.ok) return { ok: false, code: "unauthorized", message: `invalid invite (${v.code})` };
+      if (this.#seenJti.has(v.payload.jti) || this.#revokedJti.has(v.payload.jti)) {
+        return { ok: false, code: "unauthorized", message: "invite already used or revoked" };
+      }
+      this.#seenJti.add(v.payload.jti); // single use
+      const caps = v.payload.caps ? defaultCaps.filter((c) => v.payload.caps!.includes(c)) : defaultCaps;
+      return { ok: true, capabilities: caps };
+    }
     if ((role.bind_policy ?? "open") === "claim_required" && !ctx.claim) {
       return { ok: false, code: "unauthorized", message: "claim credential required" };
     }
     // default: grant all profile action kinds + proactive
-    return { ok: true, capabilities: [...this.#pinned.actionKinds, "proactive"] };
+    return { ok: true, capabilities: defaultCaps };
   }
 }

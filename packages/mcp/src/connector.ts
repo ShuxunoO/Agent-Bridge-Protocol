@@ -1,5 +1,5 @@
 import { ProfileLoader, PinnedProfile, type ApproveFn } from "@agent-bridge/validator";
-import { WssTransport, Keypair, pair, Driver, wrapUntrusted, PersonaMemoryStore, makeEnvelope, type AbpEvent, type EventContext } from "@agent-bridge/client";
+import { WssTransport, Keypair, pair, Driver, wrapUntrusted, PersonaMemoryStore, parseInvite, makeEnvelope, type AbpEvent, type EventContext } from "@agent-bridge/client";
 
 /** Label the origin of an event's untrusted content (best-effort, for the wrapper's `source` attr). */
 function eventSource(ev: AbpEvent): string {
@@ -11,9 +11,12 @@ function eventSource(ev: AbpEvent): string {
 export type BufferedEvent = { kind: string; seq: number; data: Record<string, unknown>; id: string; corr?: string };
 
 export type LinkOptions = {
-  url: string;
-  target: string;
+  /** Where to connect + which role to bind. Optional when `invite` is given (decoded from it). */
+  url?: string;
+  target?: string;
   claim?: string;
+  /** A pasteable Invite token (§4.2.1). If set, url/target/claim are taken from it — one paste = link. */
+  invite?: string;
   keypairPath?: string;
   approveProfile?: ApproveFn;
   profiles?: { id: string; version: string }[];
@@ -69,13 +72,25 @@ export class Connector {
   /** Connect outbound, pair, and start the event loop (manual turn mode). */
   async link(opts: LinkOptions): Promise<LinkResult> {
     if (this.#driver) throw new Error("already linked; close() first");
-    const transport = new WssTransport(opts.url);
+    // An Invite token carries url/target/claim — one paste links the avatar (§4.2.1).
+    let url = opts.url;
+    let target = opts.target;
+    let claim = opts.claim;
+    if (opts.invite) {
+      const inv = parseInvite(opts.invite);
+      if (!inv) throw new Error("malformed invite token");
+      url = inv.url;
+      target = inv.target;
+      claim = inv.claim;
+    }
+    if (!url || !target) throw new Error("link requires an `invite`, or both `url` and `target`");
+    const transport = new WssTransport(url);
     transport.on("error", () => {}); // post-connect transport errors must not crash the process
     await transport.connect();
     const keypair = opts.keypairPath ? Keypair.loadOrCreate(opts.keypairPath) : Keypair.generate();
     const { session, profile } = await pair(transport, keypair, new ProfileLoader(), {
-      target: opts.target,
-      claim: opts.claim,
+      target,
+      claim,
       approveProfile: opts.approveProfile,
       profiles: opts.profiles,
     });

@@ -7,6 +7,8 @@ export { makeEnvelope } from "./envelope.ts";
 export type { Envelope } from "./envelope.ts";
 export { pair, sendResume, PairingError } from "./pairing.ts";
 export type { PairOptions, PairResult } from "./pairing.ts";
+export { parseInvite } from "./invite.ts";
+export type { ParsedInvite } from "./invite.ts";
 export { EgressFilter, RateLimiter, applyEgress } from "./dlp.ts";
 export type { DlpFinding, EgressMode, EgressOptions, EgressResult } from "./dlp.ts";
 export { Driver } from "./driver.ts";

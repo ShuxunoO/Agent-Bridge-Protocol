@@ -129,6 +129,20 @@ AGENT-BRIDGE — PROGRESS LOG
 ## END ROADMAP — SESSION LOG (newest first) follows
 ################################################################################
 
+== 2026-06-23 — Session 23: F12.2 host mint + client redeem + abp_link({invite}) (C2) ==
+The redemption path. @agent-bridge/host: HostOptions.inviteSecret enables host.mintInvite(roleId,
+{url,ttlMs?,caps?,jti?}) and host.revokeInvite(jti); #bind now verifies an invite claim (sig/exp/role/
+profile via validator.verifyInvite) + a single-use jti set + revocation set, granting caps =
+role-default ∩ invite.caps. Built into the host (it has the profile + default caps) — no separate
+factory. @agent-bridge/client: parseInvite(token) -> {url,target,claim,profile}. @agent-bridge/mcp:
+abp_link gains an optional `invite` arg (url/target/claim decoded from it; url/target now optional);
+still 6 tools. e2e (real client<->host over wss) 12/12: mint->parse->pair binds a claim_required role;
+WITHOUT an invite a claim_required role is rejected; same jti twice -> unauthorized (single use);
+caps:['say'] -> only 'say' granted (least privilege); expired + tampered rejected; open role still
+binds with no claim (regression). Full suite 177. feature_list: F12.2 passed.
+Remaining: C3 (ai-town gateway exposes mintInvite + a [Connect] surface, host-adapter level, decoupled)
+and C4 (live redeem-and-drive).
+
 == 2026-06-23 — Session 22: F12.1 Invite credential format + validator (C1) ==
 Implemented the credential format (protocol-first: SPEC before code). SPEC §4.2.1 'Invite
 credentials' added — ADDITIVE, no wire change: an Invite is just a standard format for the existing

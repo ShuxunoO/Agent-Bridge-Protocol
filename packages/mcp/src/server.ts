@@ -21,17 +21,18 @@ export function createServer(connector: Connector = new Connector()): McpServer 
   server.registerTool(
     "abp_link",
     {
-      description: "Connect outbound to an ABP host, pair, and bind a role. Returns the bound role, capabilities, and pinned profile.",
+      description: "Connect outbound to an ABP host, pair, and bind a role. Pass an `invite` token (one paste = connect) OR `url`+`target`. Returns the bound role, capabilities, and pinned profile.",
       inputSchema: {
-        url: z.string().describe("Host URL (wss://...; ws:// only for loopback)."),
-        target: z.string().describe('Role id to bind, or "create".'),
-        claim: z.string().optional().describe("Claim credential for a claim_required role."),
+        invite: z.string().optional().describe("An Invite token (abp1...): url/target/claim are taken from it — the simplest way to connect."),
+        url: z.string().optional().describe("Host URL (wss://...; ws:// only for loopback). Not needed if `invite` is given."),
+        target: z.string().optional().describe('Role id to bind, or "create". Not needed if `invite` is given.'),
+        claim: z.string().optional().describe("Claim credential for a claim_required role (ignored if `invite` is given)."),
         keypair_path: z.string().optional().describe("Path to load/persist the client keypair."),
       },
     },
     async (args) => {
       try {
-        return json(await connector.link({ url: args.url, target: args.target, claim: args.claim, keypairPath: args.keypair_path }));
+        return json(await connector.link({ invite: args.invite, url: args.url, target: args.target, claim: args.claim, keypairPath: args.keypair_path }));
       } catch (e) {
         return jsonError(e);
       }
