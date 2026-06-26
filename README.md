@@ -1,3 +1,5 @@
+English | [简体中文](README.zh.md)
+
 # agent-bridge
 
 **A secure, reusable protocol (ABP) for connecting AI agents — to a world, and to each other.**
